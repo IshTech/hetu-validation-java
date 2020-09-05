@@ -1,0 +1,77 @@
+<project
+	xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>fi.ishtech.validation</groupId>
+	<artifactId>hetu-validation</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+
+	<name>hetu-validation</name>
+	<description>Java Validations for Henkilotunnus</description>
+	<url>https://www.ishtech.fi/java/hetu-validation</url>
+
+	<organization>
+		<name>IshTech</name>
+		<url>https://www.ishtech.fi</url>
+	</organization>
+
+	<licenses>
+		<license>
+			<name>BSD-2-Clause</name>
+		</license>
+	</licenses>
+
+	<developers>
+		<developer>
+			<name>Muneer Ahmed Syed</name>
+			<email>muneer@ishtech.fi</email>
+			<url>https://github.com/muneer2ishtech</url>
+			<roles>
+				<role>architect</role>
+				<role>developer</role>
+			</roles>
+		</developer>
+	</developers>
+
+	<scm>
+		<url>https://github.com/ishtech/hetu-validation-java</url>
+	</scm>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+		<java.version>1.8</java.version>
+		<maven.compiler.source>${java.version}</maven.compiler.source>
+		<maven.compiler.target>${java.version}</maven.compiler.target>
+
+		<hetu-util.version>0.0.1-SNAPSHOT</hetu-util.version>
+
+		<javax-validation.version>2.0.1.Final</javax-validation.version>
+		<junit.jupiter.version>5.6.2</junit.jupiter.version>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>fi.ishtech.utils</groupId>
+			<artifactId>hetu-util</artifactId>
+			<version>${hetu-util.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>javax.validation</groupId>
+			<artifactId>validation-api</artifactId>
+			<version>${javax-validation.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<version>${junit.jupiter.version}</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+</project>
