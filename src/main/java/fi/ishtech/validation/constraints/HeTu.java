@@ -25,7 +25,7 @@ import fi.ishtech.validation.enums.HeTuValidationMode;
 
 /**
  * Validates henkilotunnus.<br>
- * <p>
+ * <br>
  * Supports three types of validation modes:
  * <ul>
  * <li>{@link HeTuValidationMode#REGEX} - Validates if string is a well-formed in DDMMYYCZZZQ format</li>
@@ -33,7 +33,7 @@ import fi.ishtech.validation.enums.HeTuValidationMode;
  * <li>{@link HeTuValidationMode#CHECKSUM} - Validates checksum value Q after validating as per {@code REGEX} and
  * {@code DOB}. This is default mode.</li>
  * </ul>
- * </p>
+ * <br>
  * Accepts {@link CharSequence} (e.g. {@link String}).<br>
  * {@code null} elements are considered valid.<br>
  *
