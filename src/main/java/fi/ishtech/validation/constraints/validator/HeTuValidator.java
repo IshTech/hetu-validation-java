@@ -1,6 +1,3 @@
-/**
- * 
- */
 package fi.ishtech.validation.constraints.validator;
 
 import jakarta.validation.ConstraintValidator;

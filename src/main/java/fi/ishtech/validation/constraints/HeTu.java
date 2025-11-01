@@ -1,6 +1,3 @@
-/**
- * 
- */
 package fi.ishtech.validation.constraints;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
