@@ -59,7 +59,7 @@
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 
-		<hetu-util.version>1.2.0</hetu-util.version>
+		<hetu-util.version>2.0.0-SNAPSHOT</hetu-util.version>
 
 		<javax-validation.version>2.0.1.Final</javax-validation.version>
 		<junit.jupiter.version>5.6.2</junit.jupiter.version>
