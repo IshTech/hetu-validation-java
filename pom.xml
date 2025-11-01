@@ -61,7 +61,7 @@
 
 		<hetu-util.version>2.0.0-SNAPSHOT</hetu-util.version>
 
-		<javax-validation.version>2.0.1.Final</javax-validation.version>
+		<jakarta-validation.version>3.1.1</jakarta-validation.version>
 		<junit-jupiter.version>6.0.0</junit-jupiter.version>
 
 		<maven-source-plugin.version>3.3.1</maven-source-plugin.version>
@@ -79,9 +79,9 @@
 		</dependency>
 
 		<dependency>
-			<groupId>javax.validation</groupId>
-			<artifactId>validation-api</artifactId>
-			<version>${javax-validation.version}</version>
+			<groupId>jakarta.validation</groupId>
+			<artifactId>jakarta.validation-api</artifactId>
+			<version>${jakarta-validation.version}</version>
 		</dependency>
 
 		<dependency>
