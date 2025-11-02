@@ -109,7 +109,7 @@
 
 	<profiles>
 		<profile>
-			<id>central</id>
+			<id>gpg</id>
 			<build>
 				<plugins>
 					<plugin>
@@ -129,6 +129,13 @@
 							</execution>
 						</executions>
 					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>central-publishing</id>
+			<build>
+				<plugins>
 					<plugin>
 						<groupId>org.sonatype.central</groupId>
 						<artifactId>central-publishing-maven-plugin</artifactId>
