@@ -6,7 +6,7 @@
 
 	<groupId>fi.ishtech.validation</groupId>
 	<artifactId>hetu-validation</artifactId>
-	<version>1.1.0</version>
+	<version>2.0.0</version>
 	<packaging>jar</packaging>
 
 	<name>hetu-validation</name>
@@ -27,7 +27,6 @@
 	<developers>
 		<developer>
 			<name>Muneer Ahmed Syed</name>
-			<email>muneer@ishtech.fi</email>
 			<url>https://github.com/muneer2ishtech</url>
 			<roles>
 				<role>architect</role>
@@ -40,29 +39,22 @@
 		<url>https://github.com/ishtech/hetu-validation-java</url>
 	</scm>
 
-	<distributionManagement>
-		<snapshotRepository>
-			<id>ossrh</id>
-			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
-		</snapshotRepository>
-		<repository>
-			<id>ossrh</id>
-			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-		</repository>
-	</distributionManagement>
-
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-		<java.version>1.8</java.version>
+		<java.version>17</java.version>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 
-		<hetu-util.version>1.2.0</hetu-util.version>
+		<hetu-util.version>2.0.0</hetu-util.version>
 
-		<javax-validation.version>2.0.1.Final</javax-validation.version>
-		<junit.jupiter.version>5.6.2</junit.jupiter.version>
+		<jakarta-validation.version>3.1.1</jakarta-validation.version>
+		<junit-jupiter.version>6.0.0</junit-jupiter.version>
+
+		<maven-gpg-plugin.version>3.2.8</maven-gpg-plugin.version>
+
+		<central-publishing-maven-plugin.version>0.9.0</central-publishing-maven-plugin.version>
 	</properties>
 
 	<dependencies>
@@ -73,15 +65,15 @@
 		</dependency>
 
 		<dependency>
-			<groupId>javax.validation</groupId>
-			<artifactId>validation-api</artifactId>
-			<version>${javax-validation.version}</version>
+			<groupId>jakarta.validation</groupId>
+			<artifactId>jakarta.validation-api</artifactId>
+			<version>${jakarta-validation.version}</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter</artifactId>
-			<version>${junit.jupiter.version}</version>
+			<version>${junit-jupiter.version}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -91,7 +83,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
-				<version>3.2.0</version>
 				<executions>
 					<execution>
 						<id>attach-sources</id>
@@ -104,7 +95,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.2.0</version>
 				<executions>
 					<execution>
 						<id>attach-javadocs</id>
@@ -119,13 +109,13 @@
 
 	<profiles>
 		<profile>
-			<id>ossrh</id>
+			<id>gpg</id>
 			<build>
 				<plugins>
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-gpg-plugin</artifactId>
-						<version>1.6</version>
+						<version>${maven-gpg-plugin.version}</version>
 						<executions>
 							<execution>
 								<id>sign-artifacts</id>
@@ -139,15 +129,22 @@
 							</execution>
 						</executions>
 					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>central-publishing</id>
+			<build>
+				<plugins>
 					<plugin>
-						<groupId>org.sonatype.plugins</groupId>
-						<artifactId>nexus-staging-maven-plugin</artifactId>
-						<version>1.6.8</version>
+						<groupId>org.sonatype.central</groupId>
+						<artifactId>central-publishing-maven-plugin</artifactId>
+						<version>${central-publishing-maven-plugin.version}</version>
 						<extensions>true</extensions>
 						<configuration>
-							<serverId>ossrh</serverId>
-							<nexusUrl>https://oss.sonatype.org/</nexusUrl>
-							<autoReleaseAfterClose>true</autoReleaseAfterClose>
+							<publishingServerId>central-publishing</publishingServerId>
+							<autoPublish>true</autoPublish>
+							<waitUntil>published</waitUntil>
 						</configuration>
 					</plugin>
 				</plugins>
