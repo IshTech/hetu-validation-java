@@ -6,7 +6,7 @@
 
 	<groupId>fi.ishtech.validation</groupId>
 	<artifactId>hetu-validation</artifactId>
-	<version>3.0.0</version>
+	<version>4.0.0</version>
 	<packaging>jar</packaging>
 
 	<name>hetu-validation</name>
@@ -43,11 +43,11 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-		<java.version>21</java.version>
+		<java.version>25</java.version>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 
-		<hetu-util.version>3.0.0</hetu-util.version>
+		<hetu-util.version>4.0.0</hetu-util.version>
 
 		<jakarta-validation.version>3.1.1</jakarta-validation.version>
 		<junit-jupiter.version>6.0.0</junit-jupiter.version>
