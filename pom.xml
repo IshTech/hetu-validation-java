@@ -11,7 +11,7 @@
 
 	<name>hetu-validation</name>
 	<description>Java Validations for Henkilotunnus</description>
-	<url>https://www.ishtech.fi/projects/hetu-validation-java</url>
+	<url>https://www.ishtech.fi/libs/hetu-validation-java</url>
 
 	<organization>
 		<name>IshTech</name>
