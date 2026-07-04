@@ -1,4 +1,4 @@
-package fi.ishtech.validation.constraints;
+package fi.ishtech.hetu.validation.constraints;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.CONSTRUCTOR;
@@ -15,9 +15,8 @@ import java.lang.annotation.Target;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
-
-import fi.ishtech.validation.constraints.HeTu.List;
-import fi.ishtech.validation.constraints.validator.HeTuValidator;
+import fi.ishtech.hetu.validation.constraints.HeTu.List;
+import fi.ishtech.hetu.validation.constraints.validator.HeTuValidator;
 import fi.ishtech.validation.enums.HeTuValidationMode;
 
 /**
@@ -43,7 +42,7 @@ import fi.ishtech.validation.enums.HeTuValidationMode;
 @Repeatable(List.class)
 public @interface HeTu {
 
-	String message() default "{fi.ishtech.validation.constraints.HeTu.message}";
+	String message() default "{fi.ishtech.hetu.validation.constraints.HeTu.message}";
 
 	Class<?>[] groups() default {};
 
