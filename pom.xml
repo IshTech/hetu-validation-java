@@ -62,7 +62,7 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>fi.ishtech.utils</groupId>
+			<groupId>fi.ishtech.hetu</groupId>
 			<artifactId>hetu-util</artifactId>
 			<version>${hetu-util.version}</version>
 		</dependency>
