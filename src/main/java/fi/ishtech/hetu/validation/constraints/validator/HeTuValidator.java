@@ -3,7 +3,7 @@ package fi.ishtech.hetu.validation.constraints.validator;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import fi.ishtech.hetu.validation.constraints.HeTu;
-import fi.ishtech.hetu.utils.HeTuUtil;
+import fi.ishtech.hetu.util.HeTuUtil;
 import fi.ishtech.hetu.validation.enums.HeTuValidationMode;
 
 /**
