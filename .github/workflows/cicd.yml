@@ -1,0 +1,114 @@
+# Build, test and release a Maven project. Single job = no artifact passing, one JDK setup.
+
+name: Java CI with Maven
+
+on:
+  push:
+    branches: ['**']
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      manual_deploy:
+        description: "Trigger manual deployment"
+        required: true
+        type: choice
+        options:
+          - "false"
+          - "true"
+        default: "false"
+
+jobs:
+  maven-build-deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      MAVEN_CLI_OPTS: "-B -q -s .mvn/settings.xml"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up JDK 25 + Maven cache
+        uses: actions/setup-java@v5
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: maven
+
+      # 1. Validate version against branch / release tag
+      - name: Validate Project Version
+        id: validate-project-version
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          MANUAL_DEPLOY: ${{ inputs.manual_deploy }}
+        run: |
+          chmod +x mvnw
+          APP_VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout 2>/dev/null)
+          echo "Event=$GITHUB_EVENT_NAME  Ref=$GITHUB_REF_NAME ($GITHUB_REF_TYPE)  Version=$APP_VERSION"
+
+          # ---------- RELEASE RULE ----------
+          if [[ "$GITHUB_EVENT_NAME" == "release" ]]; then
+            if [[ "$APP_VERSION" == *-SNAPSHOT ]]; then
+              echo "❌ ERROR: Release version cannot be SNAPSHOT. Found: $APP_VERSION"
+              exit 1
+            fi
+            if [[ "${RELEASE_TAG#v}" != "$APP_VERSION" ]]; then
+              echo "❌ ERROR: Tag ($RELEASE_TAG) does NOT match pom version ($APP_VERSION)"
+              exit 1
+            fi
+
+          # ---------- PUSH / BRANCH RULE ----------
+          elif [[ "$GITHUB_REF_TYPE" == "branch" ]]; then
+
+            # ---------- MAIN ----------
+            if [[ "$GITHUB_REF_NAME" == "main" ]]; then
+              if [[ "$APP_VERSION" == *-SNAPSHOT ]]; then
+                echo "❌ ERROR: main branch must use RELEASE version (no -SNAPSHOT). Found: $APP_VERSION"
+                exit 1
+              fi
+              if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" && "$MANUAL_DEPLOY" == "true" ]]; then
+                echo "❌ ERROR: main can only be released via a published release tag, not manual deploy."
+                exit 1
+              fi
+
+            # ---------- DEV or ANY OTHER BRANCH ----------
+            else
+              if [[ "$APP_VERSION" != *-SNAPSHOT ]]; then
+                echo "❌ ERROR: Non-main branches must use SNAPSHOT version. Found: $APP_VERSION"
+                exit 1
+              fi
+            fi
+          fi
+
+          # Decide whether this run releases
+          DO_RELEASE=false
+          if [[ "$GITHUB_EVENT_NAME" == "release" ]]; then
+            DO_RELEASE=true
+          elif [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" && "$MANUAL_DEPLOY" == "true" && "$GITHUB_REF_NAME" != "main" ]]; then
+            DO_RELEASE=true
+          fi
+
+          echo "✔ Validation passed (do_release=$DO_RELEASE)"
+          echo "do_release=$DO_RELEASE" >> "$GITHUB_OUTPUT"
+
+      # 2. Compile
+      - name: Maven Compile
+        run: ./mvnw $MAVEN_CLI_OPTS clean compile
+
+      # 3. Test (reuse compiled classes)
+      - name: Maven Test
+        run: ./mvnw $MAVEN_CLI_OPTS test -Dmaven.main.skip=true
+
+      # 4. Release (only when conditions match)
+      - name: Import GPG key
+        if: steps.validate-project-version.outputs.do_release == 'true'
+        run: echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
+
+      - name: Publish to Maven Central Sonatype
+        if: steps.validate-project-version.outputs.do_release == 'true'
+        env:
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          GPG_KEYNAME: ${{ secrets.GPG_KEYNAME }}
+        run: ./mvnw $MAVEN_CLI_OPTS deploy -DskipTests=true -P gpg -P central-publishing
