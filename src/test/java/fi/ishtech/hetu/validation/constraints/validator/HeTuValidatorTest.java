@@ -1,58 +1,56 @@
 package fi.ishtech.hetu.validation.constraints.validator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Locale;
-import java.util.Set;
+import java.util.ResourceBundle;
 
-import org.hibernate.validator.HibernateValidator;
+import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Validation;
-import jakarta.validation.ValidatorFactory;
 import fi.ishtech.hetu.validation.constraints.HeTu;
 
+@TestMethodOrder(OrderAnnotation.class)
 class HeTuValidatorTest {
 
 	private static final String VALID_HETU = "010216-855Y";
 	private static final String INVALID_HETU = "010216-855X";
 
-	private static class Person {
+	@HeTu
+	private String hetuField;
 
-		@HeTu
-		private final String hetu;
-
-		Person(String hetu) {
-			this.hetu = hetu;
-		}
-
-	}
-
-	private static Set<ConstraintViolation<Person>> validate(String hetu, Locale locale) {
-		try (ValidatorFactory factory = Validation.byProvider(HibernateValidator.class)
-				.configure()
-				.defaultLocale(locale)
-				.buildValidatorFactory()) {
-			return factory.getValidator().validate(new Person(hetu));
-		}
+	private HeTuValidator validator() throws NoSuchFieldException {
+		HeTuValidator validator = new HeTuValidator();
+		validator.initialize(getClass().getDeclaredField("hetuField").getAnnotation(HeTu.class));
+		return validator;
 	}
 
 	@Test
-	void validAndInvalidHetu() {
-		assertTrue(validate(VALID_HETU, Locale.ENGLISH).isEmpty());
-
-		Set<ConstraintViolation<Person>> violations = validate(INVALID_HETU, Locale.ENGLISH);
-		assertEquals(1, violations.size());
-		assertEquals("Invalid Social Security Number", violations.iterator().next().getMessage());
+	@Order(1)
+	void testValidHetu() throws NoSuchFieldException {
+		assertTrue(validator().isValid(VALID_HETU, null));
 	}
 
 	@Test
-	void invalidHetuMessageInFinnish() {
-		Set<ConstraintViolation<Person>> violations = validate(INVALID_HETU, Locale.of("fi"));
-		assertEquals(1, violations.size());
-		assertEquals("Virheellinen henkilötunnus", violations.iterator().next().getMessage());
+	@Order(2)
+	void testInvalidHetu() throws NoSuchFieldException {
+		assertFalse(validator().isValid(INVALID_HETU, null));
+	}
+
+	@Test
+	@Order(3)
+	void testInvalidHetuWithFinnishMessage() throws NoSuchFieldException, NoSuchMethodException {
+		assertFalse(validator().isValid(INVALID_HETU, null));
+
+		String template = (String) HeTu.class.getMethod("message").getDefaultValue();
+		String key = template.substring(1, template.length() - 1);
+		ResourceBundle messages = ResourceBundle.getBundle("ValidationMessages", Locale.of("fi"));
+
+		assertEquals("Virheellinen henkilötunnus", messages.getString(key));
 	}
 
 }
