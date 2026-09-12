@@ -17,7 +17,7 @@ import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 import fi.ishtech.hetu.validation.constraints.HeTu.List;
 import fi.ishtech.hetu.validation.constraints.validator.HeTuValidator;
-import fi.ishtech.validation.enums.HeTuValidationMode;
+import fi.ishtech.hetu.validation.enums.HeTuValidationMode;
 
 /**
  * Validates henkilotunnus.<br>

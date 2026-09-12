@@ -1,4 +1,4 @@
-package fi.ishtech.validation.enums;
+package fi.ishtech.hetu.validation.enums;
 
 /**
  * Validation modes for HeTu

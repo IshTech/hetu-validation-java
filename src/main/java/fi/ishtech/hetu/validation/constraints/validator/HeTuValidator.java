@@ -4,7 +4,7 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import fi.ishtech.hetu.validation.constraints.HeTu;
 import fi.ishtech.hetu.utils.HeTuUtil;
-import fi.ishtech.validation.enums.HeTuValidationMode;
+import fi.ishtech.hetu.validation.enums.HeTuValidationMode;
 
 /**
  * Checks that a given {@code CharSequence} (e.g. {@code String}) is a valid henkilotunnus.<br>
