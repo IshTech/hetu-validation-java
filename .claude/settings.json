@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "ask": [
+      "Bash(git checkout -b *)",
+      "Bash(git checkout -B *)",
+      "Bash(git switch -c *)",
+      "Bash(git switch -C *)",
+      "Bash(git switch --create *)",
+      "Bash(git branch *)",
+      "Bash(git worktree add *)",
+      "Bash(git checkout main)",
+      "Bash(git switch main)",
+      "Bash(git merge *)",
+      "Bash(gh pr merge *)",
+      "Bash(git push *)",
+      "Bash(git tag *)",
+      "Bash(git reset --hard *)",
+      "Bash(git clean *)",
+      "Bash(*mvn* deploy*)",
+      "Bash(docker push *)",
+      "Bash(gh release *)",
+      "PowerShell(git checkout -b *)",
+      "PowerShell(git checkout -B *)",
+      "PowerShell(git switch -c *)",
+      "PowerShell(git switch -C *)",
+      "PowerShell(git switch --create *)",
+      "PowerShell(git branch *)",
+      "PowerShell(git worktree add *)",
+      "PowerShell(git checkout main)",
+      "PowerShell(git switch main)",
+      "PowerShell(git merge *)",
+      "PowerShell(gh pr merge *)",
+      "PowerShell(git push *)",
+      "PowerShell(git tag *)",
+      "PowerShell(git reset --hard *)",
+      "PowerShell(git clean *)",
+      "PowerShell(*mvn* deploy*)",
+      "PowerShell(docker push *)",
+      "PowerShell(gh release *)"
+    ]
+  }
+}
