@@ -63,3 +63,15 @@ Steps:
 - When an upstream repo changes, build it first with `clean install` so downstream repos build against the fresh local SNAPSHOT (`verify` installs nothing). Confirm with `./mvnw dependency:list` when it matters.
 - Decide the order from the declared versions in the build files: a downstream repo pinned to a released version isn't affected by an upstream SNAPSHOT.
 - A repo's `.claude/CLAUDE.md` lists its known dependents and its default dependent for dependent tests. The list isn't exhaustive, because a published library can be used by anyone. To find which of the owner's own repos depend on a repo, search their build files (`pom.xml`, `build.gradle.kts`); repo locations are in `owner-workflow.md`. If those repos aren't available (e.g. in a cloud or mobile session), say in your report which dependents weren't checked or tested.
+
+### Tasks that change more than one repo
+Applies when one task changes more than one of the owner's repos.
+1. Where to install: at the start, together with the branch-name approval, ask the owner:
+   - Temporary local repository (recommended): add `-Dmaven.repo.local=<temp> -Dmaven.repo.local.tail=<home>/.m2/repository` to every Maven command in the task. `<temp>` is a new directory outside every repo (for example the session's scratchpad); `<home>` is the absolute path of the user's home directory, because Maven doesn't expand `~`. Installs go only to `<temp>`; `~/.m2` is only read. Needs Maven 3.9 or later.
+   - `~/.m2`: plain `clean install`. This replaces the local SNAPSHOTs, including any installed from other branches.
+2. Which repos to build: the changed repos, plus every owner repo they depend on through a SNAPSHOT version, directly or indirectly, even when that repo has no changes: a SNAPSHOT already in `~/.m2` may have been installed from another branch. Build an unchanged repo from a clean checkout of its `dev`; if that isn't possible, ask.
+3. Order and tests: upstream first, in the order from the declared versions. Run each repo's Level 1 command, with `install` instead of `verify` or `test` for every repo that another repo in the task depends on. If a repo fails, don't build its dependents; report them as not run.
+4. Check: for each dependent, confirm its upstream artifacts resolved from the chosen location (`./mvnw dependency:list -DoutputAbsoluteArtifactFilename=true`, with the same flags).
+5. Afterwards: delete the temporary repository after the task's last build, and say so in the report.
+
+Level 3 isn't affected: the Docker build resolves upstream SNAPSHOTs from the Sonatype snapshot repository.
