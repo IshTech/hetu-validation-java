@@ -1,10 +1,11 @@
 <!-- Shared IshTech rule file: keep identical in every repo's .claude/rules/. Repo-specific notes belong in .claude/CLAUDE.md. -->
 # Git: branches, merges, commits, pushes
 
-Approval prompts in `.claude/settings.json` back up the rules below (creating branches, switching to `main`, merge, push, tag, hard reset, clean, publish).
+Approval prompts in `.claude/settings.json` back up the rules below (creating branches, switching to `main`, merge, push, tag, hard reset, clean, publish), and its deny rules block deleting, renaming and force-pushing `main` and `dev`.
 
 ## Branches
 - `dev` is the default working branch. `main` holds releases only.
+- Never delete, rename, reset, force-push or rewrite `main` or `dev`, locally or on GitHub, including during branch or worktree cleanups.
 - Creating any branch (including a worktree branch) and choosing its name needs the owner's explicit approval, every time, in every repo. Propose a name (default convention `feature/<short-topic>`), wait for approval, then create it. Never rename a branch without approval.
 - Never commit directly to `main`. If there is truly no other way, stop, explain why, and get explicit approval first.
 - To check the current branch use `git rev-parse --abbrev-ref HEAD`; `git branch ...` triggers an approval prompt.
