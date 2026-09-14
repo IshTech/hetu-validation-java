@@ -14,6 +14,7 @@ When each level runs:
 
 ### Level 1: build with tests
 - Run the build-with-tests command from the repo's README.
+- On any branch other than `dev`, run that command with `verify` instead of `install`, unless the task uses a temporary local repository ("Cross-repo builds"), so that `~/.m2` keeps only builds of `dev`.
 - Passes when the build succeeds with no compile errors and no test failures or errors. Report the test counts.
 
 ### Level 2: run the app with Maven/Gradle
