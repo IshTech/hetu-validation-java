@@ -52,7 +52,7 @@ If the owner doesn't name a dependent, use the default dependent listed in the r
 
 Steps:
 1. Choose where the dependent gets the changed library from. If the owner hasn't said, ask:
-   - Local build: `clean install` the changed library, so the dependent resolves it from the local Maven repository.
+   - Local build: build the changed library in this task as section "Cross-repo builds" describes for an upstream repo changed in the task, so the dependent resolves that build.
    - Published SNAPSHOT: the version in the Maven Central snapshot repository. Use it only if you can confirm it was published from the branch being tested, after that branch's latest commit (compare the timestamp in the snapshot repository's `maven-metadata.xml` with that commit's time). If you can't confirm both, say so and ask the owner. To stop a Maven dependent from resolving a local build instead, build it with an empty temporary local repository (`-Dmaven.repo.local=<temporary directory>`).
 2. Check that the dependent declares the library version being tested. If it doesn't, ask the owner before changing the dependent's build file.
 3. Confirm which library artifact the dependent actually resolved (Maven: `./mvnw dependency:list`; Gradle: `./gradlew dependencies`).
@@ -60,18 +60,40 @@ Steps:
 5. Report per dependent: done or not done (and why), the library source used (local build or published SNAPSHOT), the result of each test level, and whether the change had the intended effect, not just that nothing broke.
 
 ## Cross-repo builds
-- When an upstream repo changes, build it first with `clean install` so downstream repos build against the fresh local SNAPSHOT (`verify` installs nothing). Confirm with `./mvnw dependency:list` when it matters.
-- Decide the order from the declared versions in the build files: a downstream repo pinned to a released version isn't affected by an upstream SNAPSHOT.
+An upstream repo is one of the owner's repos whose artifact a repo being built declares as a SNAPSHOT dependency, directly or through another upstream repo. A dependency on a released version is fixed and needs none of the steps in this section.
+
+- Build order: decide it from the declared versions in the build files. Build each upstream repo before the repos that depend on it.
 - A repo's `.claude/CLAUDE.md` lists its known dependents and its default dependent for dependent tests. The list isn't exhaustive, because a published library can be used by anyone. To find which of the owner's own repos depend on a repo, search their build files (`pom.xml`, `build.gradle.kts`); repo locations are in `owner-workflow.md`. If those repos aren't available (e.g. in a cloud or mobile session), say in your report which dependents weren't checked or tested.
 
-### Tasks that change more than one repo
-Applies when one task changes more than one of the owner's repos.
-1. Where to install: at the start, together with the branch-name approval, ask the owner:
-   - Temporary local repository (recommended): add `-Dmaven.repo.local=<temp> -Dmaven.repo.local.tail=<home>/.m2/repository` to every Maven command in the task. `<temp>` is a new directory outside every repo (for example the session's scratchpad); `<home>` is the absolute path of the user's home directory, because Maven doesn't expand `~`. Installs go only to `<temp>`; `~/.m2` is only read. Needs Maven 3.9 or later.
-   - `~/.m2`: plain `clean install`. This replaces the local SNAPSHOTs, including any installed from other branches.
-2. Which repos to build: the changed repos, plus every owner repo they depend on through a SNAPSHOT version, directly or indirectly, even when that repo has no changes: a SNAPSHOT already in `~/.m2` may have been installed from another branch. Build an unchanged repo from a clean checkout of its `dev`; if that isn't possible, ask.
-3. Order and tests: upstream first, in the order from the declared versions. Run each repo's Level 1 command, with `install` instead of `verify` or `test` for every repo that another repo in the task depends on. If a repo fails, don't build its dependents; report them as not run.
-4. Check: for each dependent, confirm its upstream artifacts resolved from the chosen location (`./mvnw dependency:list -DoutputAbsoluteArtifactFilename=true`, with the same flags).
-5. Afterwards: delete the temporary repository after the task's last build, and say so in the report.
+### Which build of an upstream repo to use
+The local Maven repository `~/.m2` holds only builds of each repo's latest `dev`. Every other build goes into a temporary local repository (see "Temporary local repository" below), so it never replaces them.
 
-Level 3 isn't affected: the Docker build resolves upstream SNAPSHOTs from the Sonatype snapshot repository.
+For each upstream repo, use the first row that applies:
+
+| Upstream repo | Build to use | Where the build comes from |
+|---|---|---|
+| Changed in this task | This task's branch of it | Build and test it in this task, and install it into the temporary local repository. |
+| Not changed in this task, and the owner names a branch of it for this task | That branch | Build and test it in this task from a clean checkout of that branch, and install it into the temporary local repository. |
+| Not changed in this task, and the owner names no branch | Its latest `dev` | Use the build in `~/.m2` if it is a build of the latest `dev` (checks below). If it isn't, ask the owner for permission; then build and test it from a clean checkout of `dev`, and install it into the temporary local repository. |
+
+A build in `~/.m2` counts as a build of the latest `dev` only if both checks pass:
+1. It was installed after the latest commit on `dev`: `lastUpdated` in `maven-metadata-local.xml`, in the artifact's SNAPSHOT version directory (UTC, format `yyyyMMddHHmmss`), is later than the commit time from `git log -1 --format=%cI dev`.
+2. No other local branch of that repo has a commit later than the latest commit on `dev`.
+
+If either check fails, or can't be done, the build doesn't count.
+
+A clean checkout is a working tree at the branch's latest commit with no uncommitted changes. If none exists, ask the owner how to get one. Don't switch the branch of an existing checkout.
+
+### Temporary local repository
+- Use one only when the table above requires it. Create one new directory per task, outside every repo (for example in the session's scratchpad).
+- When a task changes more than one repo, tell the owner at the start, together with the branch-name approval, that builds will install into a temporary local repository, and get their confirmation. If the owner declines, install into `~/.m2` instead, and say in the report that the `dev` builds there were replaced.
+- Add these options to every Maven command of the task, including builds, runs, `dependency:list` and `help:*`: `-Dmaven.repo.local=<temp> -Dmaven.repo.local.tail=<home>/.m2/repository`. `<temp>` is the directory's absolute path; `<home>` is the absolute path of the user's home directory, because Maven doesn't expand `~`. Maven then installs only into `<temp>`, and reads everything else from `~/.m2` without changing it. This needs Maven 3.9 or later (check with `./mvnw -v`).
+- Delete the directory after the task's last Maven command, and say so in the report.
+
+Level 3 isn't affected: the Docker build resolves upstream SNAPSHOTs from the Sonatype snapshot repository, not from a local repository.
+
+### Build and test in order
+1. Build every upstream repo that the table says to build, and every repo changed in this task, in the build order.
+2. For each repo, run its Level 1 command. Use `install` instead of `verify` or `test` for every repo that another repo in the task depends on.
+3. If a repo fails, don't build the repos that depend on it; report them as not run.
+4. For each repo that has upstream repos, confirm that every upstream artifact resolved from the location the table gives: run `./mvnw dependency:list -DoutputAbsoluteArtifactFilename=true` with the same options as the build. If any resolved from somewhere else (for example the remote snapshot repository), stop and report it.
