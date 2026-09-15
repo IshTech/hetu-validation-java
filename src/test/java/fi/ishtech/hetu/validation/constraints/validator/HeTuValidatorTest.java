@@ -48,7 +48,7 @@ class HeTuValidatorTest {
 
 		String template = (String) HeTu.class.getMethod("message").getDefaultValue();
 		String key = template.substring(1, template.length() - 1);
-		ResourceBundle messages = ResourceBundle.getBundle("ValidationMessages", Locale.of("fi"));
+		ResourceBundle messages = ResourceBundle.getBundle("ValidationMessages", Locale.forLanguageTag("fi"));
 
 		assertEquals("Virheellinen henkilötunnus", messages.getString(key));
 	}
