@@ -14,7 +14,8 @@ When each level runs:
 
 ### Level 1: build with tests
 - Run the build-with-tests command from the repo's README.
-- On any branch other than `dev`, run that command with `verify` instead of `install`, unless the task uses a temporary local repository ("Cross-repo builds"), so that `~/.m2` keeps only builds of `dev`.
+- Maven: on any branch other than `dev`, run that command with `verify` instead of `install`, unless the task uses a temporary local repository ("Cross-repo builds"), so that `~/.m2` keeps only builds of `dev`.
+- Gradle: `./gradlew clean build` doesn't install anything into `~/.m2`, so run it as the README gives it, on any branch.
 - Passes when the build succeeds with no compile errors and no test failures or errors. Report the test counts.
 
 ### Level 2: run the app with Maven/Gradle
@@ -89,7 +90,8 @@ A clean checkout is a working tree at the branch's latest commit with no uncommi
 - Use one only when the table above requires it. Create one new directory per task, outside every repo (for example in the session's scratchpad).
 - When a task changes more than one repo, tell the owner at the start, together with the branch-name approval, that builds will install into a temporary local repository, and get their confirmation. If the owner declines, install into `~/.m2` instead, and say in the report that the `dev` builds there were replaced.
 - Add these options to every Maven command of the task, including builds, runs, `dependency:list` and `help:*`: `-Dmaven.repo.local=<temp> -Dmaven.repo.local.tail=<home>/.m2/repository`. `<temp>` is the directory's absolute path; `<home>` is the absolute path of the user's home directory, because Maven doesn't expand `~`. Maven then installs only into `<temp>`, and reads everything else from `~/.m2` without changing it. This needs Maven 3.9 or later (check with `./mvnw -v`).
-- Delete the directory after the task's last Maven command, and say so in the report.
+- Gradle (`springboot-books-app`): its `mavenLocal()` repository reads the temporary repository when `-Dmaven.repo.local=<temp>` is passed to `./gradlew`. Gradle has no equivalent of `maven.repo.local.tail`, so every ishtech SNAPSHOT it doesn't find there resolves from the Sonatype snapshot repository instead of `~/.m2`. Therefore install every upstream SNAPSHOT the Gradle build needs into the temporary repository, and confirm with `./gradlew dependencyInsight --dependency <artifactId> -Dmaven.repo.local=<temp>`.
+- Delete the directory after the task's last Maven or Gradle command, and say so in the report.
 
 Level 3 isn't affected: the Docker build resolves upstream SNAPSHOTs from the Sonatype snapshot repository, not from a local repository.
 
@@ -97,4 +99,4 @@ Level 3 isn't affected: the Docker build resolves upstream SNAPSHOTs from the So
 1. Build every upstream repo that the table says to build, and every repo changed in this task, in the build order.
 2. For each repo, run its Level 1 command. Use `install` instead of `verify` or `test` for every repo that another repo in the task depends on.
 3. If a repo fails, don't build the repos that depend on it; report them as not run.
-4. For each repo that has upstream repos, confirm that every upstream artifact resolved from the location the table gives: run `./mvnw dependency:list -DoutputAbsoluteArtifactFilename=true` with the same options as the build. If any resolved from somewhere else (for example the remote snapshot repository), stop and report it.
+4. For each repo that has upstream repos, confirm that every upstream artifact resolved from the location the table gives: run `./mvnw dependency:list -DoutputAbsoluteArtifactFilename=true` (Gradle: `./gradlew dependencyInsight --dependency <artifactId>`) with the same options as the build. If any resolved from somewhere else (for example the remote snapshot repository), stop and report it.
