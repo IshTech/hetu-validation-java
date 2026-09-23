@@ -49,7 +49,7 @@ They run:
 - when the owner asks (for example: "test these `ishtech-base-jpa` changes in `ishtech-springboot-jwtauth`, so I'm sure they don't break anything and do what's intended"), and
 - always, as part of the readiness check.
 
-If the owner doesn't name a dependent, use the default dependent listed in the repo's `.claude/CLAUDE.md`.
+If the owner doesn't name a dependent, use the default dependent listed in the repo's `.claude/CLAUDE.md`. If it lists none, ask the owner which dependent to use; in the readiness check, report the dependent tests as not done for that reason unless the owner names one.
 
 Steps:
 1. Choose where the dependent gets the changed library from. If the owner hasn't said, ask:
@@ -63,8 +63,8 @@ Steps:
 ## Cross-repo builds
 An upstream repo is one of the owner's repos whose artifact a repo being built declares as a SNAPSHOT dependency, directly or through another upstream repo. A dependency on a released version is fixed and needs none of the steps in this section.
 
-- Build order: decide it from the declared versions in the build files. Build each upstream repo before the repos that depend on it.
-- A repo's `.claude/CLAUDE.md` lists its known dependents and its default dependent for dependent tests. The list isn't exhaustive, because a published library can be used by anyone. To find which of the owner's own repos depend on a repo, search their build files (`pom.xml`, `build.gradle.kts`); repo locations are in `owner-workflow.md`. If those repos aren't available (e.g. in a cloud or mobile session), say in your report which dependents weren't checked or tested.
+- Build order: decide it from the declared versions in the build files (overview: `repositories.md`, section "Order of work across repos"). Build each upstream repo before the repos that depend on it. Repos with no dependency path between them can be built in parallel.
+- A library's `.claude/CLAUDE.md` lists only the owner's other libraries that depend on it, and its default dependent for dependent tests, if it has one. Applications that use a library aren't listed, because a published library can be used by anyone (`repositories.md`). To find which of the owner's repos use a library, search their build files (`pom.xml`, `build.gradle.kts`). If those repos aren't available (e.g. in a cloud or mobile session), say in your report which dependents weren't checked or tested.
 
 ### Which build of an upstream repo to use
 The local Maven repository `~/.m2` holds only builds of each repo's latest `dev`. Every other build goes into a temporary local repository (see "Temporary local repository" below), so it never replaces them.
