@@ -63,11 +63,11 @@ Before `dev` is merged into `main`, `pom.xml` on `dev` must meet all of these:
 So a library is released only after the owner's libraries it depends on are released. Release one repo at a time, upstream first (`repositories.md`, section "Order of work across repos").
 
 ## Release
-The owner decides when to release and which version. The owner can do any step below, or ask Claude to do one or more of them. A request to do a step includes the permissions that step needs (a direct commit on `dev`, the merge into `main`, publishing the release). Claude stops and reports when a check fails or a decision belongs to the owner.
+The owner decides when to release and which version. The owner can do any step below, or ask Claude to do one or more of them. Claude stops and reports when a check fails or a decision belongs to the owner.
 
 Unless the owner asks for several repos to be released together, release one repo at a time: complete its release, including step 8 (Verification), before starting the next. The order of section "Release criteria" still applies.
 
-The version commits below (steps 1, 2 and 9) go directly on `dev`. When the owner hasn't asked for these steps, ask first, giving the reason: it is a one-line version change in `pom.xml`, which in steps 1 and 2 must be among the last commits on `dev` before the merge into `main`.
+The version commits below (steps 1, 2 and 9: a dependency on the owner's libraries set to its release version, the project set to its release version, and the next SNAPSHOT version) are the only commits that go directly on `dev` during a release; any other change goes through a feature branch (`git-and-branches.md`, section "Branches"). When the owner has asked Claude to do these steps, that request is the permission; otherwise ask first, giving the reason: it is a one-line version change in `pom.xml`, which in steps 1 and 2 must be among the last commits on `dev` before the merge into `main`.
 
 ### Version
 The owner decides the version. At the start of the preparation, recommend one, with the reasons, based on the changes from `main` to `dev`:
@@ -90,6 +90,7 @@ If the recommended version differs from the version in `pom.xml` on `dev` (witho
 ### Merge
 6. Merge the pull request from `dev` to `main`.
    - Preconditions: steps 1 to 5 are done, and no commit has been added to `dev` since steps 3 and 4 checked it (the pull request's head is that commit); the pull request has no merge conflicts.
+   - Permission: Claude merges only after the owner's explicit yes to a question about this merge alone, asked once the preconditions are met, naming the pull request and the version, for example "Merge <owner>/<repo>#<number> (Dev to main - x.y.z) into main?". This applies even when the owner has asked Claude to do the whole release.
    - GitHub web UI: on the pull request, choose "Create a merge commit" (not squash or rebase), keep the default commit message, and confirm.
    - gh CLI: `gh pr merge <number> --repo <owner>/<repo> --merge`
    - After merging: the CI run for the merge commit on `main` must succeed ("Validate Project Version", "Maven Compile" and "Maven Test" pass; "Import GPG key" and "Publish to Maven Central Sonatype" are skipped). If it fails, stop and report to the owner.
@@ -97,6 +98,7 @@ If the recommended version differs from the version in `pom.xml` on `dev` (witho
 ### Publish
 7. Publish the GitHub release. CI then publishes the release to Maven Central.
    - Preconditions: step 6 is done and its CI run on `main` succeeded; the version in `pom.xml` on `main` is `x.y.z`; no tag `vx.y.z` exists yet.
+   - Permission: Claude publishes only after the owner's explicit yes to a question about this release alone, asked once the preconditions are met, naming the repo and the tag, for example "Publish release vx.y.z of <owner>/<repo> from main?". This applies even when the owner has asked Claude to do the whole release.
    - Tag `vx.y.z` on the latest commit of `main`, title `vx.y.z`. Description:
      - a heading `## What's Changed`, followed by the notes of the pull request;
      - a line `- Dev to main - x.y.z by @<author of the pull request> in <link to the pull request>`;
@@ -142,6 +144,7 @@ Only after the release `x.y.z` has passed "Verification" (section "Release", ste
 5. Check the CI runs on `dev-jdkNN`, as in section "Release", step 3.
 6. Publish the GitHub release, as in section "Release", step 7, with these differences:
    - Preconditions: steps 1 to 5 are done; the version in `pom.xml` on `dev-jdkNN` is `x.y.z-jdkNN`; no tag `vx.y.z-jdkNN` exists yet.
+   - Permission: as in section "Release", step 7, for example "Publish release vx.y.z-jdkNN of <owner>/<repo> from dev-jdkNN?".
    - Tag `vx.y.z-jdkNN` on the latest commit of `dev-jdkNN`, title `vx.y.z-jdkNN`. The description has no pull request line; its last line is `**Full Changelog**: https://github.com/<owner>/<repo>/compare/v<previous version>-jdkNN...vx.y.z-jdkNN`.
    - GitHub web UI: Target: `dev-jdkNN`; leave "Set as the latest release" unticked.
    - gh CLI: `gh release create vx.y.z-jdkNN --repo <owner>/<repo> --target dev-jdkNN --title "vx.y.z-jdkNN" --notes-file notes-vx.y.z-jdkNN.md --latest=false`

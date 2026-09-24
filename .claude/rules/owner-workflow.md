@@ -9,5 +9,5 @@
 - When the owner asks for a task to run "in a worktree" or "as a separate task", create it so it opens as its own session in the Claude Code sidebar: offer it as a suggested background task that the owner starts in a fresh worktree. Don't create the worktree yourself with `git worktree add`, and don't run it as a background agent inside the current session. If the current session has no way to create such a task, say so and ask the owner how to proceed. Branch-name approval still applies (`git-and-branches.md`).
 - Verify before stating something as fact: versions, build results, what resolved from where. If you didn't verify it, say so. Report failures and skipped steps plainly.
 - Flag anything odd you notice, even outside the current task (a missing `.mvn/settings.xml`, mismatched coordinates, stale docs). Point it out; don't silently fix it and don't silently accept it.
-- A repo can be excused from a strict rule only when the owner says so, and only for that task.
+- When the owner asks for something that differs from these rules (for example, to skip a test or to commit a change directly on `dev`), it applies only to that request, in that task. It doesn't change the rules or set a precedent for later tasks.
 - The owner's repos, where they are, and how they depend on each other: `repositories.md`.
