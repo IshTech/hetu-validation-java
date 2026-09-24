@@ -1,0 +1,40 @@
+<settings>
+	<servers>
+		<server>
+			<id>central-publishing</id>
+			<username>${env.SONATYPE_USERNAME}</username>
+			<password>${env.SONATYPE_PASSWORD}</password>
+		</server>
+	</servers>
+
+	<profiles>
+		<profile>
+			<id>gpg</id>
+			<properties>
+				<gpg.keyname>${env.GPG_KEYNAME}</gpg.keyname>
+			</properties>
+		</profile>
+		<profile>
+			<id>central-repos</id>
+			<repositories>
+				<!-- Sonatype central for snapshots -->
+				<repository>
+					<name>Central Portal Snapshots</name>
+					<id>central-portal-snapshots</id>
+					<url>https://central.sonatype.com/repository/maven-snapshots/</url>
+					<releases>
+						<enabled>false</enabled>
+					</releases>
+					<snapshots>
+						<enabled>true</enabled>
+						<updatePolicy>always</updatePolicy>
+					</snapshots>
+				</repository>
+			</repositories>
+		</profile>
+	</profiles>
+
+	<activeProfiles>
+		<activeProfile>central-repos</activeProfile>
+	</activeProfiles>
+</settings>
