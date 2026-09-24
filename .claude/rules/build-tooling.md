@@ -2,7 +2,7 @@
 # Build tooling
 
 - Update generated or managed files with the tool's own command, not by hand-editing.
-- Dependency and plugin versions are pom properties: change the property, not the usage.
+- Dependency and plugin versions are declared once and referenced: Maven `<properties>` in `pom.xml`, Gradle `val` declarations at the top of `build.gradle.kts`. Change the declaration, not the usage.
 - Check the latest release before upgrading (Maven Central `maven-metadata.xml`, or `https://services.gradle.org/versions/current`). Use stable releases, not milestones or RCs.
 - Don't change `.gitattributes` without the owner's approval.
 
