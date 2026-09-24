@@ -63,9 +63,11 @@ Before `dev` is merged into `main`, `pom.xml` on `dev` must meet all of these:
 So a library is released only after the owner's libraries it depends on are released. Release one repo at a time, upstream first (`repositories.md`, section "Order of work across repos").
 
 ## Release
-The owner decides when to release and which version. Claude does each step below only when the owner asks. Only the owner merges `dev` into `main` and publishes the GitHub release (`git-and-branches.md`, section "Merges").
+The owner decides when to release and which version. The owner can do any step below, or ask Claude to do one or more of them. Claude stops and reports when a check fails or a decision belongs to the owner.
 
-The version commits below (steps 1, 2 and 8) go directly on `dev`. `git-and-branches.md` allows that only when the owner says so, so ask the owner each time, giving the reason: it is a one-line version change in `pom.xml`, which in steps 1 and 2 must be among the last commits on `dev` before the merge into `main`.
+Unless the owner asks for several repos to be released together, release one repo at a time: complete its release, including step 8 (Verification), before starting the next. The order of section "Release criteria" still applies.
+
+The version commits below (steps 1, 2 and 9: a dependency on the owner's libraries set to its release version, the project set to its release version, and the next SNAPSHOT version) are the only commits that go directly on `dev` during a release; any other change goes through a feature branch (`git-and-branches.md`, section "Branches"). When the owner has asked Claude to do these steps, that request is the permission; otherwise ask first, giving the reason: it is a one-line version change in `pom.xml`, which in steps 1 and 2 must be among the last commits on `dev` before the merge into `main`.
 
 ### Version
 The owner decides the version. At the start of the preparation, recommend one, with the reasons, based on the changes from `main` to `dev`:
@@ -84,13 +86,34 @@ If the recommended version differs from the version in `pom.xml` on `dev` (witho
    - Report any other failure to the owner, with the failing step and its error, and wait for the owner to decide whether to go on with the release.
 4. Run the readiness check (section "Readiness for the owner's pull request from `dev` to `main`").
 5. Update the title and notes of the pull request from `dev` to `main` (section "Pull request from `dev` to `main`").
-6. The owner merges the pull request and publishes a GitHub release with the tag `vx.y.z`. CI then publishes the release to Maven Central.
+
+### Merge
+6. Merge the pull request from `dev` to `main`.
+   - Preconditions: steps 1 to 5 are done, and no commit has been added to `dev` since steps 3 and 4 checked it (the pull request's head is that commit); the pull request has no merge conflicts.
+   - Permission: Claude merges only after the owner's explicit yes to a question about this merge alone, asked once the preconditions are met, naming the pull request and the version, for example "Merge <owner>/<repo>#<number> (Dev to main - x.y.z) into main?". This applies even when the owner has asked Claude to do the whole release.
+   - GitHub web UI: on the pull request, choose "Create a merge commit" (not squash or rebase), keep the default commit message, and confirm.
+   - gh CLI: `gh pr merge <number> --repo <owner>/<repo> --merge`
+   - After merging: the CI run for the merge commit on `main` must succeed ("Validate Project Version", "Maven Compile" and "Maven Test" pass; "Import GPG key" and "Publish to Maven Central Sonatype" are skipped). If it fails, stop and report to the owner.
+
+### Publish
+7. Publish the GitHub release. CI then publishes the release to Maven Central.
+   - Preconditions: step 6 is done and its CI run on `main` succeeded; the version in `pom.xml` on `main` is `x.y.z`; no tag `vx.y.z` exists yet.
+   - Permission: Claude publishes only after the owner's explicit yes to a question about this release alone, asked once the preconditions are met, naming the repo and the tag, for example "Publish release vx.y.z of <owner>/<repo> from main?". This applies even when the owner has asked Claude to do the whole release.
+   - Tag `vx.y.z` on the latest commit of `main`, title `vx.y.z`. Description:
+     - a heading `## What's Changed`, followed by the notes of the pull request;
+     - a line `- Dev to main - x.y.z by @<author of the pull request> in <link to the pull request>`;
+     - a last line `**Full Changelog**: https://github.com/<owner>/<repo>/compare/v<previous version>...vx.y.z`, or `**Full Changelog**: https://github.com/<owner>/<repo>/commits/vx.y.z` for a first release.
+   - GitHub web UI: Releases → "Draft a new release" → "Choose a tag": type `vx.y.z` and select "Create new tag: vx.y.z on publish" → Target: `main` → Release title: `vx.y.z` → paste the description → leave "Set as a pre-release" unticked → tick "Set as the latest release" → "Publish release".
+   - gh CLI: save the description as `notes-vx.y.z.md`, then:
+     `gh release create vx.y.z --repo <owner>/<repo> --target main --title "vx.y.z" --notes-file notes-vx.y.z.md --latest`
+   - If Claude does this step but the session has no way to create a release (no `gh` with a token), give the owner the description and the command instead.
 
 ### Verification
-7. Check that the CI run for the GitHub release succeeded, and that version `x.y.z` is on Maven Central (the URL is in section "Release criteria", criterion 3).
+8. Check that the CI run for the GitHub release succeeded, including "Publish to Maven Central Sonatype", and that version `x.y.z` is on Maven Central (the URL is in section "Release criteria", criterion 3).
 
 ### After the release
-8. In `pom.xml` on `dev`, set the next minor SNAPSHOT version (for example `5.3.0-SNAPSHOT` after `5.2.0`), unless the owner gives another. Commit `pom - x.y.z snapshot version`.
+9. Only after the release `x.y.z` has passed step 8 (Verification): in `pom.xml` on `dev`, set the next minor SNAPSHOT version `x.(y+1).0-SNAPSHOT` (for example `6.1.0-SNAPSHOT` after `6.0.0`), unless the owner gives another. Commit `pom - x.(y+1).0 snapshot version`.
+   This step can come before or after the JDK variant releases of `x.y.z` (section "JDK variants"); the owner decides.
 
 ## JDK variants
 `dev` and `main` use the default JDK version, the latest LTS version (`java.version` in `pom.xml`), and their code and dependencies are kept at the latest available versions. They never keep older code or older dependency versions only to stay compatible with an earlier JDK.
@@ -112,17 +135,28 @@ Each branch `dev-jdkNN`:
 ### Keeping a JDK variant up to date (optional)
 When the owner asks: merge `dev` into `dev-jdkNN`, then run Level 1 (`build-and-test.md`) with JDK NN. This finds incompatibilities before the next release. If the build fails, propose the compatibility change to the owner.
 
+Before merging, check:
+1. Does `dev` contain changes that aren't in `main`'s latest release `vx.y.z`?
+2. If yes: has `x.y.z-jdkNN` been released (the tag `vx.y.z-jdkNN` exists)?
+
+Merge only if the answer to 1 is no, or the answer to 2 is yes. Otherwise don't merge `dev`: the release `x.y.z-jdkNN` must be built from the tag `vx.y.z` only (subsection "Releasing a JDK variant"), so release it first.
+
 ### Releasing a JDK variant
-Only after the release `x.y.z` has passed "Verification" (section "Release", step 7), and only when the owner asks. One repo at a time, upstream first, as in section "Release criteria".
+Only after the release `x.y.z` has passed "Verification" (section "Release", step 8), and only when the owner asks. One repo at a time, upstream first, as in section "Release criteria".
 
 1. Merge the tag `vx.y.z` into `dev-jdkNN`.
 2. In `pom.xml` on `dev-jdkNN`, set each dependency on the owner's libraries to its release version with the suffix `-jdkNN`. Commit `pom - <artifactId> a.b.c-jdkNN`.
 3. In `pom.xml` on `dev-jdkNN`, set the project version to `x.y.z-jdkNN`. Commit `pom - x.y.z-jdkNN release version`.
 4. Run the readiness check (section "Readiness for the owner's pull request from `dev` to `main`") on `dev-jdkNN`, with JDK NN. Release criteria 2 and 3 apply with the suffix: each dependency on the owner's libraries has a release version with the suffix `-jdkNN`, and that version is on Maven Central.
 5. Check the CI runs on `dev-jdkNN`, as in section "Release", step 3.
-6. The owner publishes a GitHub release with the tag `vx.y.z-jdkNN` on the latest commit of `dev-jdkNN`, with "Set as the latest release" unticked. CI then publishes the release to Maven Central.
+6. Publish the GitHub release, as in section "Release", step 7, with these differences:
+   - Preconditions: steps 1 to 5 are done; the version in `pom.xml` on `dev-jdkNN` is `x.y.z-jdkNN`; no tag `vx.y.z-jdkNN` exists yet.
+   - Permission: as in section "Release", step 7, for example "Publish release vx.y.z-jdkNN of <owner>/<repo> from dev-jdkNN?".
+   - Tag `vx.y.z-jdkNN` on the latest commit of `dev-jdkNN`, title `vx.y.z-jdkNN`. The description has no pull request line; its last line is `**Full Changelog**: https://github.com/<owner>/<repo>/compare/v<previous version>-jdkNN...vx.y.z-jdkNN`.
+   - GitHub web UI: Target: `dev-jdkNN`; leave "Set as the latest release" unticked.
+   - gh CLI: `gh release create vx.y.z-jdkNN --repo <owner>/<repo> --target dev-jdkNN --title "vx.y.z-jdkNN" --notes-file notes-vx.y.z-jdkNN.md --latest=false`
 7. Check that the CI run for the GitHub release succeeded, and that version `x.y.z-jdkNN` is on Maven Central.
-8. In `pom.xml` on `dev-jdkNN`, set the next SNAPSHOT version with the same number as on `dev` (for example `6.1.0-jdk21-SNAPSHOT` when `dev` has `6.1.0-SNAPSHOT`). Commit `pom - x.y.z-jdkNN snapshot version`.
+8. Only after the release `x.y.z-jdkNN` has passed step 7: in `pom.xml` on `dev-jdkNN`, set the next SNAPSHOT version `x.(y+1).0-jdkNN-SNAPSHOT` (for example `6.1.0-jdk21-SNAPSHOT` after `6.0.0-jdk21`), with the same number as the next version of `dev` in section "Release", step 9, whether or not `dev` already has it. Commit `pom - x.(y+1).0-jdkNN snapshot version`.
 
 ## Publishing upstream SNAPSHOTs before Level 3
 When the upstream SNAPSHOTs that test Level 3 needs aren't published yet (for example because `dev` isn't pushed), work in this order:
