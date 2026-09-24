@@ -20,6 +20,6 @@ The docs are the source of truth. Don't guess commands: open the matching file a
 | check the default JDK version or the other supported JDK versions | `README.md`, section "Tech stack"; which library version belongs to which JDK version, `JDK-VERSIONS.md`; for the `dev-jdkNN` branches and their releases, `rules/versions-and-releases.md`, section "JDK variants" |
 | publish (only when the owner asks) | `README.md`, section "Publish to Maven Central" |
 | change the version or anything release-related, or check what CI enforces | `.github/workflows/cicd.yml` (`README.md` has no CI section yet) |
-| report or fix a bug | `KNOWN-ISSUES.md` (doesn't exist yet; create it as `rules/documentation.md` describes when the first issue is recorded) |
+| report or fix a bug | `KNOWN-ISSUES.md` (format: `rules/documentation.md`) |
 
 If a doc is missing, wrong or unclear, fix the doc (see `rules/documentation.md`) instead of working around it.

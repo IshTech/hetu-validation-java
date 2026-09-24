@@ -100,3 +100,7 @@ It depends on `hetu-util`. When that dependency is a SNAPSHOT version that isn't
   ```
   ./mvnw clean deploy -P gpg -P central-publishing
   ```
+
+## Known Issues
+
+See [KNOWN-ISSUES.md](KNOWN-ISSUES.md).
