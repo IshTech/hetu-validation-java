@@ -8,7 +8,7 @@
 
 ## Readiness for the owner's pull request from `dev` to `main`
 When the owner asks whether `dev` is ready, run every check below and report each result:
-1. No SNAPSHOT dependencies: every ishtech dependency is a release version.
+1. The release criteria are met (section "Release criteria").
 2. Test Level 1 passes (`build-and-test.md`).
 3. Test Levels 2 and 3 pass, for repos that have them (`build-and-test.md`).
 4. Dependent tests pass against the repo's default dependent, for repos that other repos depend on. Report whether they were done and each result, as `build-and-test.md`, section "Dependent tests", describes.
@@ -53,6 +53,44 @@ Style:
 
 ### Keeping the pull request up to date
 Check the title and notes against `dev`, as described above, only when the owner asks, and before a release (for example after the release version is set in `pom.xml`). Propose the corrections to the owner as described at the start of this section.
+
+## Release criteria
+Before `dev` is merged into `main`, `pom.xml` on `dev` must meet all of these:
+1. The project version has no `-SNAPSHOT`.
+2. Every dependency on one of the owner's libraries (`groupId` starting with `fi.ishtech`) has a release version, not a SNAPSHOT version.
+3. Each of those release versions is on Maven Central: `https://repo1.maven.org/maven2/<groupId, with each dot replaced by a slash>/<artifactId>/maven-metadata.xml` lists it.
+
+So a library is released only after the owner's libraries it depends on are released. Release one repo at a time, upstream first (`repositories.md`, section "Order of work across repos").
+
+## Release
+The owner decides when to release and which version. Claude does each step below only when the owner asks. Only the owner merges `dev` into `main` and publishes the GitHub release (`git-and-branches.md`, section "Merges").
+
+The version commits below (steps 1, 2 and 8) go directly on `dev`. `git-and-branches.md` allows that only when the owner says so, so ask the owner each time, giving the reason: it is a one-line version change in `pom.xml`, which in steps 1 and 2 must be among the last commits on `dev` before the merge into `main`.
+
+### Version
+The owner decides the version. At the start of the preparation, recommend one, with the reasons, based on the changes from `main` to `dev`:
+- Minor (`x.y.0`): the default.
+- Major (`x.0.0`): when there is a breaking change (see the top of this file), or when the Java version (`java.version` in `pom.xml`) changes. List each breaking change found.
+- Patch (`x.y.z`): only when the owner asks for a release with bug fixes only.
+
+If the recommended version differs from the version in `pom.xml` on `dev` (without `-SNAPSHOT`), say so; step 2 then sets the version the owner decides.
+
+### Preparation
+1. In `pom.xml` on `dev`, set each dependency on the owner's libraries to its release version. Commit `pom - <artifactId> x.y.z`, one commit per dependency.
+2. In `pom.xml` on `dev`, set the project version to the release version, without `-SNAPSHOT`. Commit `pom - x.y.z release version`.
+3. Check the CI runs on `dev` (GitHub Actions):
+   - The run for the commit `pom - x.y.z release version` is expected to fail, only in the step "Validate Project Version", with the error that a branch other than `main` must use a SNAPSHOT version. That confirms the version check works.
+   - Every other run on `dev` since the previous release must have succeeded, or have been followed by a successful run.
+   - Report any other failure to the owner, with the failing step and its error, and wait for the owner to decide whether to go on with the release.
+4. Run the readiness check (section "Readiness for the owner's pull request from `dev` to `main`").
+5. Update the title and notes of the pull request from `dev` to `main` (section "Pull request from `dev` to `main`").
+6. The owner merges the pull request and publishes a GitHub release with the tag `vx.y.z`. CI then publishes the release to Maven Central.
+
+### Verification
+7. Check that the CI run for the GitHub release succeeded, and that version `x.y.z` is on Maven Central (the URL is in section "Release criteria", criterion 3).
+
+### After the release
+8. In `pom.xml` on `dev`, set the next minor SNAPSHOT version (for example `5.3.0-SNAPSHOT` after `5.2.0`), unless the owner gives another. Commit `pom - x.y.z snapshot version`.
 
 ## Publishing upstream SNAPSHOTs before Level 3
 When the upstream SNAPSHOTs that test Level 3 needs aren't published yet (for example because `dev` isn't pushed), work in this order:
