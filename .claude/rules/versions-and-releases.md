@@ -3,7 +3,7 @@
 
 - `dev` and feature branches use a SNAPSHOT version (`x.y.z-SNAPSHOT`; a feature branch may add a qualifier, e.g. `x.y.z-topic-SNAPSHOT`). `main` uses a release version without SNAPSHOT.
 - A version bump is its own commit.
-- Library repos (published to Maven Central; see the publish section of the repo's README) have consumers you cannot know. Treat public classes, configuration properties and behaviour as a contract: a breaking change needs a major version bump and the owner's approval.
+- Library repos (published to Maven Central; see the repo's README, section "Deploy to Sonatype Central") have consumers you cannot know. Treat public classes, configuration properties and behaviour as a contract: a breaking change needs a major version bump and the owner's approval.
 - Never publish anything unless the owner explicitly asks for that specific publish: no `deploy`, no `-P central-publishing` or `-P gpg`, no Docker image push, no release or tag.
 
 ## Readiness for the owner's pull request from `dev` to `main`
@@ -96,7 +96,7 @@ If the recommended version differs from the version in `pom.xml` on `dev` (witho
 When the upstream SNAPSHOTs that test Level 3 needs aren't published yet (for example because `dev` isn't pushed), work in this order:
 1. Run test Levels 1 and 2 locally.
 2. Only when the owner is satisfied with the results and explicitly asks: push `dev` and trigger the repo's manual deploy (`workflow_dispatch` with `manual_deploy=true`), one repo at a time in dependency order, upstream first (for example `ishtech-i18n-java`, then `ishtech-base-jpa`, then `ishtech-springboot-jwtauth`).
-   - Wait for each deploy to succeed before pushing the next repo. The CI build that runs on every push resolves upstream SNAPSHOTs from Sonatype, so a repo pushed before its upstream SNAPSHOT is published is built against the old one and may fail.
+   - Wait for each deploy to succeed before pushing the next repo. The CI build that runs on every push resolves upstream SNAPSHOTs from the Sonatype snapshot repository, so a repo pushed before its upstream SNAPSHOT is published is built against the old one and may fail.
    - Only the upstream repos need deploying for Level 3; the repo under test doesn't.
    - A manual deploy can publish more than SNAPSHOTs (for example a Docker image). Check the repo's CI workflow before triggering it.
 3. Then run test Level 3.
