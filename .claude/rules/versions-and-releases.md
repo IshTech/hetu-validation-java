@@ -92,6 +92,38 @@ If the recommended version differs from the version in `pom.xml` on `dev` (witho
 ### After the release
 8. In `pom.xml` on `dev`, set the next minor SNAPSHOT version (for example `5.3.0-SNAPSHOT` after `5.2.0`), unless the owner gives another. Commit `pom - x.y.z snapshot version`.
 
+## JDK variants
+`dev` and `main` use the default JDK version, the latest LTS version (`java.version` in `pom.xml`), and their code and dependencies are kept at the latest available versions. They never keep older code or older dependency versions only to stay compatible with an earlier JDK.
+
+A library can also be released for other supported JDK versions. The README, section "Tech stack", lists the default JDK version and the other supported JDK versions; each other supported JDK version has a branch `dev-jdkNN` in the repo. If that list doesn't match `java.version` in `pom.xml` on `dev`, or doesn't match the branches (`git ls-remote --heads origin 'dev-jdk*'`), tell the owner. When the owner adds or drops a supported JDK version, update that list in the same task. In this section, `NN` stands for such a JDK version (for example `21`). Names always use `jdkNN`, lowercase, without a hyphen between `jdk` and the number; text uses "JDK NN".
+
+Each branch `dev-jdkNN`:
+- Is never merged into `dev` or `main`.
+- Differs from `dev` in:
+  - the project version, with the suffix `-jdkNN`;
+  - `java.version`, set to `NN`;
+  - the JDK version in the "Set up JDK" step of `.github/workflows/cicd.yml`;
+  - every dependency on the owner's libraries, with the same suffix `-jdkNN`;
+  - the compatibility changes JDK NN needs: code changed, or dependencies left at an earlier version, only where the code on `dev` doesn't compile or pass its tests on JDK NN.
+- Keeps these differences when `dev` or a release tag is merged into it.
+- Uses the version `x.y.z-jdkNN-SNAPSHOT` between releases, and `x.y.z-jdkNN` for a release, where `x.y.z` is the version of the release it is built from.
+- Gets commits and merges only with the owner's permission, as for `dev`.
+
+### Keeping a JDK variant up to date (optional)
+When the owner asks: merge `dev` into `dev-jdkNN`, then run Level 1 (`build-and-test.md`) with JDK NN. This finds incompatibilities before the next release. If the build fails, propose the compatibility change to the owner.
+
+### Releasing a JDK variant
+Only after the release `x.y.z` has passed "Verification" (section "Release", step 7), and only when the owner asks. One repo at a time, upstream first, as in section "Release criteria".
+
+1. Merge the tag `vx.y.z` into `dev-jdkNN`.
+2. In `pom.xml` on `dev-jdkNN`, set each dependency on the owner's libraries to its release version with the suffix `-jdkNN`. Commit `pom - <artifactId> a.b.c-jdkNN`.
+3. In `pom.xml` on `dev-jdkNN`, set the project version to `x.y.z-jdkNN`. Commit `pom - x.y.z-jdkNN release version`.
+4. Run the readiness check (section "Readiness for the owner's pull request from `dev` to `main`") on `dev-jdkNN`, with JDK NN. Release criteria 2 and 3 apply with the suffix: each dependency on the owner's libraries has a release version with the suffix `-jdkNN`, and that version is on Maven Central.
+5. Check the CI runs on `dev-jdkNN`, as in section "Release", step 3.
+6. The owner publishes a GitHub release with the tag `vx.y.z-jdkNN` on the latest commit of `dev-jdkNN`, with "Set as the latest release" unticked. CI then publishes the release to Maven Central.
+7. Check that the CI run for the GitHub release succeeded, and that version `x.y.z-jdkNN` is on Maven Central.
+8. In `pom.xml` on `dev-jdkNN`, set the next SNAPSHOT version with the same number as on `dev` (for example `6.1.0-jdk21-SNAPSHOT` when `dev` has `6.1.0-SNAPSHOT`). Commit `pom - x.y.z-jdkNN snapshot version`.
+
 ## Publishing upstream SNAPSHOTs before Level 3
 When the upstream SNAPSHOTs that test Level 3 needs aren't published yet (for example because `dev` isn't pushed), work in this order:
 1. Run test Levels 1 and 2 locally.

@@ -17,6 +17,7 @@ The docs are the source of truth. Don't guess commands: open the matching file a
 |---|---|
 | work out what the library does and how consumers add it | `README.md`, the introduction and section "Usage", including subsection "Code Samples" |
 | run test Level 1 (build with tests) | `README.md`, section "Build", subsection "Local Maven Build" |
+| check the default JDK version or the other supported JDK versions | `README.md`, section "Tech stack"; for the `dev-jdkNN` branches and their releases, `rules/versions-and-releases.md`, section "JDK variants" |
 | publish (only when the owner asks) | `README.md`, section "Deploy to Sonatype Central" |
 | change the version or anything release-related, or check what CI enforces | `.github/workflows/cicd.yml` (`README.md` has no CI section yet) |
 | report or fix a bug | `KNOWN-ISSUES.md` (doesn't exist yet; create it as `rules/documentation.md` describes when the first issue is recorded) |
