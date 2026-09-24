@@ -66,7 +66,7 @@ public class Person {
 
 This is a library; it **does not run** as a standalone application.
 
-It depends on `hetu-util`. When that dependency is a `-SNAPSHOT` version that is not published, build [hetu-util-java](https://github.com/ishtech/hetu-util-java) first so the snapshot is in the local Maven repository.
+It depends on `hetu-util`. When that dependency is a SNAPSHOT version that isn't in the Sonatype snapshot repository, build [hetu-util-java](https://github.com/ishtech/hetu-util-java) first so the snapshot is in the local Maven repository.
 
 ### Maven
 
