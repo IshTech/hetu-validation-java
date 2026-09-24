@@ -15,11 +15,7 @@ This library provides a Jakarta Validation constraint for that format, built on 
   - JDK 21
   - JDK 17
 
-### Library version for each JDK version
-
-- Releases for the default JDK version have plain version numbers, for example `x.y.z`. They are built from the branches `dev` and `main`.
-- Releases for another supported JDK version have the same version number with the suffix `-jdkNN`, for example `x.y.z-jdk21` for JDK 21. They are built from the branch `dev-jdkNN`, for example `dev-jdk21`, from the same code, adapted where that JDK version needs it.
-- Use the version that matches your JDK version. Dependency update tools may suggest the version without a suffix as newer; that version needs the default JDK version.
+Which library version to use for your JDK version: [JDK-VERSIONS.md](JDK-VERSIONS.md).
 
 ## Usage
 
@@ -104,3 +100,7 @@ It depends on `hetu-util`. When that dependency is a SNAPSHOT version that isn't
   ```
   ./mvnw clean deploy -P gpg -P central-publishing
   ```
+
+## Known Issues
+
+See [KNOWN-ISSUES.md](KNOWN-ISSUES.md).
