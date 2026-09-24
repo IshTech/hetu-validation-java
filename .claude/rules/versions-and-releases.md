@@ -112,7 +112,8 @@ If the recommended version differs from the version in `pom.xml` on `dev` (witho
 8. Check that the CI run for the GitHub release succeeded, including "Publish to Maven Central Sonatype", and that version `x.y.z` is on Maven Central (the URL is in section "Release criteria", criterion 3).
 
 ### After the release
-9. In `pom.xml` on `dev`, set the next minor SNAPSHOT version (for example `5.3.0-SNAPSHOT` after `5.2.0`), unless the owner gives another. Commit `pom - x.y.z snapshot version`.
+9. Only after the release `x.y.z` has passed step 8 (Verification): in `pom.xml` on `dev`, set the next minor SNAPSHOT version `x.(y+1).0-SNAPSHOT` (for example `6.1.0-SNAPSHOT` after `6.0.0`), unless the owner gives another. Commit `pom - x.(y+1).0 snapshot version`.
+   This step can come before or after the JDK variant releases of `x.y.z` (section "JDK variants"); the owner decides.
 
 ## JDK variants
 `dev` and `main` use the default JDK version, the latest LTS version (`java.version` in `pom.xml`), and their code and dependencies are kept at the latest available versions. They never keep older code or older dependency versions only to stay compatible with an earlier JDK.
@@ -134,6 +135,12 @@ Each branch `dev-jdkNN`:
 ### Keeping a JDK variant up to date (optional)
 When the owner asks: merge `dev` into `dev-jdkNN`, then run Level 1 (`build-and-test.md`) with JDK NN. This finds incompatibilities before the next release. If the build fails, propose the compatibility change to the owner.
 
+Before merging, check:
+1. Does `dev` contain changes that aren't in `main`'s latest release `vx.y.z`?
+2. If yes: has `x.y.z-jdkNN` been released (the tag `vx.y.z-jdkNN` exists)?
+
+Merge only if the answer to 1 is no, or the answer to 2 is yes. Otherwise don't merge `dev`: the release `x.y.z-jdkNN` must be built from the tag `vx.y.z` only (subsection "Releasing a JDK variant"), so release it first.
+
 ### Releasing a JDK variant
 Only after the release `x.y.z` has passed "Verification" (section "Release", step 8), and only when the owner asks. One repo at a time, upstream first, as in section "Release criteria".
 
@@ -149,7 +156,7 @@ Only after the release `x.y.z` has passed "Verification" (section "Release", ste
    - GitHub web UI: Target: `dev-jdkNN`; leave "Set as the latest release" unticked.
    - gh CLI: `gh release create vx.y.z-jdkNN --repo <owner>/<repo> --target dev-jdkNN --title "vx.y.z-jdkNN" --notes-file notes-vx.y.z-jdkNN.md --latest=false`
 7. Check that the CI run for the GitHub release succeeded, and that version `x.y.z-jdkNN` is on Maven Central.
-8. In `pom.xml` on `dev-jdkNN`, set the next SNAPSHOT version with the same number as on `dev` (for example `6.1.0-jdk21-SNAPSHOT` when `dev` has `6.1.0-SNAPSHOT`). Commit `pom - x.y.z-jdkNN snapshot version`.
+8. Only after the release `x.y.z-jdkNN` has passed step 7: in `pom.xml` on `dev-jdkNN`, set the next SNAPSHOT version `x.(y+1).0-jdkNN-SNAPSHOT` (for example `6.1.0-jdk21-SNAPSHOT` after `6.0.0-jdk21`), with the same number as the next version of `dev` in section "Release", step 9, whether or not `dev` already has it. Commit `pom - x.(y+1).0-jdkNN snapshot version`.
 
 ## Publishing upstream SNAPSHOTs before Level 3
 When the upstream SNAPSHOTs that test Level 3 needs aren't published yet (for example because `dev` isn't pushed), work in this order:
