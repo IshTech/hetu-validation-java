@@ -8,6 +8,19 @@ It uses the form DDMMYYCZZZQ, where DDMMYY is the date of birth.
 
 This library provides a Jakarta Validation constraint for that format, built on [hetu-util-java](https://github.com/ishtech/hetu-util-java).
 
+## Tech stack
+
+- JDK 25 (default)
+- Other supported JDK versions:
+  - JDK 21
+  - JDK 17
+
+### Library version for each JDK version
+
+- Releases for the default JDK version have plain version numbers, for example `x.y.z`. They are built from the branches `dev` and `main`.
+- Releases for another supported JDK version have the same version number with the suffix `-jdkNN`, for example `x.y.z-jdk21` for JDK 21. They are built from the branch `dev-jdkNN`, for example `dev-jdk21`, from the same code, adapted where that JDK version needs it.
+- Use the version that matches your JDK version. Dependency update tools may suggest the version without a suffix as newer; that version needs the default JDK version.
+
 ## Usage
 
 - Note: in `pom.xml` / `build.gradle` put required version number
@@ -89,3 +102,5 @@ It depends on `hetu-util`. When that dependency is a SNAPSHOT version that isn't
 ```
 ./mvnw clean deploy -P gpg -P central-publishing
 ```
+  ./mvnw clean deploy -P gpg -P central-publishing
+  ```
