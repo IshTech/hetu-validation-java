@@ -46,4 +46,4 @@ The build files (`pom.xml`, `build.gradle.kts`) are the source of truth for depe
 When a task changes several repos:
 - Upstream first: change, build and test a library before the libraries and applications that use it (`build-and-test.md`, section "Cross-repo builds").
 - Repos with no dependency path between them are independent. Their changes and tests can be done in parallel or in any order: for example `ishtech-validations-java` and `ishtech-base-jpa`, or anything in the `hetu-*` chain and anything in the `ishtech-*` chain.
-- Pushes and publishing of upstream SNAPSHOTs also go upstream first, one repo at a time (`versions-and-releases.md`, section "Publishing upstream SNAPSHOTs before Level 3").
+- Pushes and publishing of upstream SNAPSHOTs also go upstream first, one repo at a time (`versions-and-releases.md`, section "Publishing upstream SNAPSHOTs before Level 3"). To run the CI/CD of several repos that depend on each other, follow `cicd-dependency-check.md`.

@@ -164,7 +164,7 @@ Only after the release `x.y.z` has passed "Verification" (section "Release", ste
 When the upstream SNAPSHOTs that test Level 3 needs aren't published yet (for example because `dev` isn't pushed), work in this order:
 1. Run test Levels 1 and 2 locally.
 2. Only when the owner is satisfied with the results and explicitly asks: push `dev` and trigger the repo's manual deploy (`workflow_dispatch` with `manual_deploy=true`), one repo at a time in dependency order, upstream first (for example `ishtech-i18n-java`, then `ishtech-base-jpa`, then `ishtech-springboot-jwtauth`).
-   - Wait for each deploy to succeed before pushing the next repo. The CI build that runs on every push resolves upstream SNAPSHOTs from the Sonatype snapshot repository, so a repo pushed before its upstream SNAPSHOT is published is built against the old one and may fail.
+   - Wait for each deploy to succeed before pushing the next repo, and check that the SNAPSHOT built by that deploy is available (`cicd-dependency-check.md`). The CI build that runs on every push resolves upstream SNAPSHOTs from the Sonatype snapshot repository, so a repo pushed before its upstream SNAPSHOT is published is built against the old one and may fail.
    - Only the upstream repos need deploying for Level 3; the repo under test doesn't.
    - A manual deploy can publish more than SNAPSHOTs (for example a Docker image). Check the repo's CI workflow before triggering it.
 3. Then run test Level 3.
