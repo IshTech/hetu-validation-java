@@ -1,4 +1,6 @@
 # Running CI/CD across several repos
+This file covers CI/CD runs on GitHub Actions. For builds and tests on the local machine, follow `build-and-test.md`, section "Cross-repo builds".
+
 When the owner asks to run the CI/CD workflow of several repos and some of them depend on others, ask the owner first whether to wait for the dependencies, unless the request already says so (for example "check and use dependency"). Check the dependencies both in the Claude files (`repositories.md` and each repo's `.claude/CLAUDE.md`) and in the build files (`pom.xml` or `build.gradle.kts`); where they disagree, the build files take precedence (`repositories.md`, section "Order of work across repos").
 
 If the owner wants the wait, for each repo B that depends on a repo A in the request:
