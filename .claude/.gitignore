@@ -1,0 +1,9 @@
+# Keep Claude Code runtime and personal files out of git.
+# Whitelist: everything in .claude/ is ignored except the entries below.
+# Patterns are anchored with "/" so files inside rules/ stay tracked.
+# If you add a new shared folder (e.g. skills/, agents/, commands/), whitelist it here.
+/*
+!/.gitignore
+!/CLAUDE.md
+!/settings.json
+!/rules/
