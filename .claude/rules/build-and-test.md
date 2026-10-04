@@ -44,6 +44,8 @@ Afterwards, tear the stack down with `docker compose down -v`.
 ## Dependent tests
 A dependent is a repo that declares this repo's artifact as a dependency in its build file (`pom.xml` or `build.gradle.kts`). Dependent tests are for repos that other repos depend on. They are separate from the test levels.
 
+Testing a dependent doesn't make it part of the current task or release: it's in scope only when the owner names it explicitly. A dependent that isn't in scope is only built and tested locally, as this section describes; don't change, commit, push, merge or release it.
+
 Purpose: to confirm that a change in this repo does not break its dependents and has the intended effect in them. This matters most before a release, so dependent tests are required for the `dev` to `main` readiness check (`versions-and-releases.md`).
 
 They run:

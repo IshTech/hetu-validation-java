@@ -1,10 +1,19 @@
 # Build, test and release a Maven project. Single job = no artifact passing, one JDK setup.
+#
+# Deploy rules:
+# - GitHub release with tag vx.y.z, on main only                  -> release to Maven Central
+# - Push of tag vx.y.z-jdkMN, on dev-jdkMN only, after release
+#   vx.y.z is merged into it and its CI run succeeded             -> release to Maven Central
+# - Manual run with manual_deploy=true, on any branch except main -> SNAPSHOT to Sonatype Central
+#   (dev: x.y.z-SNAPSHOT, dev-jdkMN: x.y.z-jdkMN-SNAPSHOT,
+#    other branches: x.y.z-<qualifier>-SNAPSHOT, qualifier not ending in jdkNN)
 
 name: Java CI with Maven
 
 on:
   push:
     branches: ['**']
+    tags: ['v*-jdk*']
   release:
     types: [published]
   workflow_dispatch:
@@ -17,10 +26,18 @@ on:
           - "false"
           - "true"
         default: "false"
+      central_publishing_wait_max_time:
+        description: "Optional: seconds to wait for Maven Central publishing (above 1800)"
+        required: false
+        type: number
 
 jobs:
   maven-build-deploy:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      actions: read
 
     env:
       MAVEN_CLI_OPTS: "-B -q -s .mvn/settings.xml"
@@ -28,6 +45,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # full history and tags, to check which branch a tag is on
 
       - name: Set up JDK 21 + Maven cache
         uses: actions/setup-java@v6
@@ -42,51 +61,104 @@ jobs:
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
           MANUAL_DEPLOY: ${{ inputs.manual_deploy }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           chmod +x mvnw
           APP_VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout 2>/dev/null)
           echo "Event=$GITHUB_EVENT_NAME  Ref=$GITHUB_REF_NAME ($GITHUB_REF_TYPE)  Version=$APP_VERSION"
 
-          # ---------- RELEASE RULE ----------
+          fail() { echo "❌ ERROR: $*"; exit 1; }
+          RELEASE_RE='^[0-9]+\.[0-9]+\.[0-9]+$'
+          JDK_RELEASE_RE='^([0-9]+\.[0-9]+\.[0-9]+)-jdk([0-9]+)$'
+          DO_RELEASE=false
+
+          # ---------- GITHUB RELEASE: vx.y.z on main only ----------
           if [[ "$GITHUB_EVENT_NAME" == "release" ]]; then
-            if [[ "$APP_VERSION" == *-SNAPSHOT ]]; then
-              echo "❌ ERROR: Release version cannot be SNAPSHOT. Found: $APP_VERSION"
-              exit 1
+            if ! [[ "$APP_VERSION" =~ $RELEASE_RE ]]; then
+              fail "Release version must be x.y.z. Found: $APP_VERSION"
             fi
-            if [[ "${RELEASE_TAG#v}" != "$APP_VERSION" ]]; then
-              echo "❌ ERROR: Tag ($RELEASE_TAG) does NOT match pom version ($APP_VERSION)"
-              exit 1
+            if [[ "$RELEASE_TAG" != "v$APP_VERSION" ]]; then
+              fail "Tag ($RELEASE_TAG) does NOT match pom version (v$APP_VERSION)"
+            fi
+            if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+              fail "Release tag $RELEASE_TAG is not on main. GitHub releases are only for main."
+            fi
+            DO_RELEASE=true
+
+          # ---------- MANUAL RUN FROM A TAG: never deploys ----------
+          elif [[ "$GITHUB_REF_TYPE" == "tag" && "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            if [[ "$MANUAL_DEPLOY" == "true" ]]; then
+              fail "Manual deploy is not allowed from a tag. Push a vx.y.z-jdkMN tag or publish a GitHub release instead."
             fi
 
-          # ---------- PUSH / BRANCH RULE ----------
+          # ---------- TAG PUSH: vx.y.z-jdkMN on dev-jdkMN only ----------
+          elif [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            if ! [[ "$APP_VERSION" =~ $JDK_RELEASE_RE ]]; then
+              fail "Tag deploy needs pom version x.y.z-jdkMN. Found: $APP_VERSION"
+            fi
+            BASE_VERSION="${BASH_REMATCH[1]}"
+            JDK="${BASH_REMATCH[2]}"
+            if [[ "$GITHUB_REF_NAME" != "v$APP_VERSION" ]]; then
+              fail "Tag ($GITHUB_REF_NAME) does NOT match pom version (v$APP_VERSION)"
+            fi
+            if ! git rev-parse -q --verify "refs/remotes/origin/dev-jdk$JDK" >/dev/null; then
+              fail "Branch dev-jdk$JDK does not exist"
+            fi
+            if ! git merge-base --is-ancestor "$GITHUB_SHA" "origin/dev-jdk$JDK"; then
+              fail "Tag $GITHUB_REF_NAME is not on branch dev-jdk$JDK"
+            fi
+            if ! git rev-parse -q --verify "refs/tags/v$BASE_VERSION" >/dev/null; then
+              fail "Release tag v$BASE_VERSION does not exist"
+            fi
+            if ! git merge-base --is-ancestor "v$BASE_VERSION" "$GITHUB_SHA"; then
+              fail "Release tag v$BASE_VERSION is not merged into $GITHUB_REF_NAME"
+            fi
+            BASE_SHA=$(git rev-list -n 1 "v$BASE_VERSION")
+            BASE_RUNS=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/cicd.yml/runs?event=release&head_sha=$BASE_SHA&status=success" --jq '.total_count')
+            if [[ "$BASE_RUNS" -eq 0 ]]; then
+              fail "No successful CI deploy run for release v$BASE_VERSION"
+            fi
+            DO_RELEASE=true
+
+          # ---------- PUSH / MANUAL RUN ON A BRANCH ----------
           elif [[ "$GITHUB_REF_TYPE" == "branch" ]]; then
 
             # ---------- MAIN ----------
             if [[ "$GITHUB_REF_NAME" == "main" ]]; then
-              if [[ "$APP_VERSION" == *-SNAPSHOT ]]; then
-                echo "❌ ERROR: main branch must use RELEASE version (no -SNAPSHOT). Found: $APP_VERSION"
-                exit 1
+              if ! [[ "$APP_VERSION" =~ $RELEASE_RE ]]; then
+                fail "main branch must use RELEASE version x.y.z. Found: $APP_VERSION"
               fi
               if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" && "$MANUAL_DEPLOY" == "true" ]]; then
-                echo "❌ ERROR: main can only be released via a published release tag, not manual deploy."
-                exit 1
+                fail "main can only be released via a published release tag, not manual deploy."
               fi
 
             # ---------- DEV or ANY OTHER BRANCH ----------
             else
               if [[ "$APP_VERSION" != *-SNAPSHOT ]]; then
-                echo "❌ ERROR: Non-main branches must use SNAPSHOT version. Found: $APP_VERSION"
-                exit 1
+                fail "Non-main branches must use SNAPSHOT version. Found: $APP_VERSION"
+              fi
+
+              if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" && "$MANUAL_DEPLOY" == "true" ]]; then
+                if [[ "$GITHUB_REF_NAME" == "dev" ]]; then
+                  EXPECTED="x.y.z-SNAPSHOT"
+                  SNAPSHOT_RE='^[0-9]+\.[0-9]+\.[0-9]+-SNAPSHOT$'
+                elif [[ "$GITHUB_REF_NAME" =~ ^dev-jdk([0-9]+)$ ]]; then
+                  JDK="${BASH_REMATCH[1]}"
+                  EXPECTED="x.y.z-jdk$JDK-SNAPSHOT"
+                  SNAPSHOT_RE='^[0-9]+\.[0-9]+\.[0-9]+-jdk'"$JDK"'-SNAPSHOT$'
+                else
+                  EXPECTED="x.y.z-<qualifier>-SNAPSHOT (qualifier: letters, digits, - or _, not ending in jdkNN)"
+                  SNAPSHOT_RE='^[0-9]+\.[0-9]+\.[0-9]+-[A-Za-z0-9_-]+-SNAPSHOT$'
+                  if [[ "$APP_VERSION" =~ jdk[0-9]+-SNAPSHOT$ ]]; then
+                    fail "Manual deploy on $GITHUB_REF_NAME needs version $EXPECTED. Found: $APP_VERSION"
+                  fi
+                fi
+                if ! [[ "$APP_VERSION" =~ $SNAPSHOT_RE ]]; then
+                  fail "Manual deploy on $GITHUB_REF_NAME needs version $EXPECTED. Found: $APP_VERSION"
+                fi
+                DO_RELEASE=true
               fi
             fi
-          fi
-
-          # Decide whether this run releases
-          DO_RELEASE=false
-          if [[ "$GITHUB_EVENT_NAME" == "release" ]]; then
-            DO_RELEASE=true
-          elif [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" && "$MANUAL_DEPLOY" == "true" && "$GITHUB_REF_NAME" != "main" ]]; then
-            DO_RELEASE=true
           fi
 
           echo "✔ Validation passed (do_release=$DO_RELEASE)"
@@ -111,4 +183,14 @@ jobs:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           GPG_KEYNAME: ${{ secrets.GPG_KEYNAME }}
-        run: ./mvnw $MAVEN_CLI_OPTS deploy -DskipTests=true -P gpg -P central-publishing
+          CENTRAL_PUBLISHING_WAIT_MAX_TIME: ${{ inputs.central_publishing_wait_max_time || vars.CENTRAL_PUBLISHING_WAIT_MAX_TIME }}
+        run: |
+          CENTRAL_PUBLISHING_OPTS=""
+          if [[ -n "$CENTRAL_PUBLISHING_WAIT_MAX_TIME" ]]; then
+            if ! [[ "$CENTRAL_PUBLISHING_WAIT_MAX_TIME" =~ ^[0-9]+$ ]] || (( CENTRAL_PUBLISHING_WAIT_MAX_TIME <= 1800 )); then
+              echo "❌ ERROR: central_publishing_wait_max_time must be a number of seconds above 1800. Found: $CENTRAL_PUBLISHING_WAIT_MAX_TIME"
+              exit 1
+            fi
+            CENTRAL_PUBLISHING_OPTS="-DwaitMaxTime=$CENTRAL_PUBLISHING_WAIT_MAX_TIME"
+          fi
+          ./mvnw $MAVEN_CLI_OPTS deploy -DskipTests=true -P gpg -P central-publishing $CENTRAL_PUBLISHING_OPTS

@@ -1,7 +1,7 @@
 <!-- Repo-specific instructions. The shared IshTech rules live in .claude/rules/ and are identical across repos; don't put repo-specific content there. -->
 # hetu-validation-java
 
-The owner's standing instructions are in `.claude/rules/` (`owner-workflow.md`, `git-and-branches.md`, `versions-and-releases.md`, `build-and-test.md`, `build-tooling.md`, `documentation.md`, `repositories.md`). They apply to every task in this repo. This file adds only what is specific to this repo.
+The owner's standing instructions are in `.claude/rules/` (`owner-workflow.md`, `git-and-branches.md`, `versions-and-releases.md`, `build-and-test.md`, `build-tooling.md`, `documentation.md`, `repositories.md`, `cicd-dependency-check.md`). They apply to every task in this repo. This file adds only what is specific to this repo.
 
 ## About this repo
 - It's a library with no runnable application (`pom.xml` has no Spring Boot plugin, and there is no application class), so it has only test Level 1 of its own.
