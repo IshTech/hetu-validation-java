@@ -152,18 +152,34 @@ Conflicts in this merge: only one case is resolved without asking. When `dev` wa
 ### Releasing a JDK variant
 Only after the release `x.y.z` has passed "Verification" (section "Release", step 8), and only when the owner asks. One repo at a time, upstream first, as in section "Release criteria".
 
-1. Merge the tag `vx.y.z` into `dev-jdkNN`.
+1. Merge the tag `vx.y.z` (not `dev`) into `dev-jdkNN`.
+   - If the project version conflicts, keep the version of `dev-jdkNN`.
 2. In `pom.xml` on `dev-jdkNN`, set each dependency on the owner's libraries to its release version with the suffix `-jdkNN`. Commit `pom - <artifactId> a.b.c-jdkNN`.
 3. In `pom.xml` on `dev-jdkNN`, set the project version to `x.y.z-jdkNN`. Commit `pom - x.y.z-jdkNN release version`.
 4. Run the readiness check (section "Readiness for the owner's pull request from `dev` to `main`") on `dev-jdkNN`, with JDK NN. Release criteria 2 and 3 apply with the suffix: each dependency on the owner's libraries has a release version with the suffix `-jdkNN`, and that version is on Maven Central.
-5. Check the CI runs on `dev-jdkNN`, as in section "Release", step 3.
-6. Publish the GitHub release, as in section "Release", step 7, with these differences:
-   - Preconditions: steps 1 to 5 are done; the version in `pom.xml` on `dev-jdkNN` is `x.y.z-jdkNN`; no tag `vx.y.z-jdkNN` exists yet.
-   - Permission: as in section "Release", step 7, for example "Publish release vx.y.z-jdkNN of <owner>/<repo> from dev-jdkNN?".
-   - Tag `vx.y.z-jdkNN` on the latest commit of `dev-jdkNN`, title `vx.y.z-jdkNN`. The description has no pull request line; its last line is `**Full Changelog**: https://github.com/<owner>/<repo>/compare/v<previous version>-jdkNN...vx.y.z-jdkNN`.
-   - GitHub web UI: Target: `dev-jdkNN`; leave "Set as the latest release" unticked.
-   - gh CLI: `gh release create vx.y.z-jdkNN --repo <owner>/<repo> --target dev-jdkNN --title "vx.y.z-jdkNN" --notes-file notes-vx.y.z-jdkNN.md --latest=false`
-7. Check that the CI run for the GitHub release succeeded, and that version `x.y.z-jdkNN` is on Maven Central.
+5. Push `dev-jdkNN` and check its CI run fails at "Validate Project Version".
+   - It fails because CI requires a SNAPSHOT version on every branch except `main`, and `x.y.z-jdkNN` isn't one. That confirms the version check works.
+6. Release by pushing the tag `vx.y.z-jdkNN` on the branch `dev-jdkNN`; CI then publishes the release to Maven Central. Don't create a GitHub release.
+   - CI accepts a GitHub release only for `x.y.z`, so its run would fail at "Validate Project Version".
+   - Preconditions: steps 1 to 5 are done; `origin/dev-jdkNN` is still at the commit tested in steps 4 and 5; no tag `vx.y.z-jdkNN` exists yet.
+   - Create the tag on that commit:
+     ```
+     git fetch origin dev-jdkNN
+     git tag vx.y.z-jdkNN origin/dev-jdkNN
+     ```
+   - Verify the tag before pushing it. The first command lists the JDK variant tags of `x.y.z`. The second must show the commit tested in steps 4 and 5, with the subject `pom - x.y.z-jdkNN release version`, and the third must show the same hash.
+     ```
+     git tag -l 'vx.y.z-jdk*'
+     git log -1 --format='%h %cd %s' vx.y.z-jdkNN
+     git rev-parse --short origin/dev-jdkNN
+     ```
+   - Permission: pushing the tag triggers the CI run that publishes the release to Maven Central, which can't be undone. Push it only after the owner's explicit yes, for example "Push tag vx.y.z-jdkNN on <commit> of dev-jdkNN to <owner>/<repo>?".
+   - Push the tag:
+     ```
+     git push origin vx.y.z-jdkNN
+     ```
+   - If Claude can't do these steps (for example, a cloud session can't push tags: GitHub returns HTTP 403), give the owner the commands and instructions above instead.
+7. Check that the CI run for the tag push (`vx.y.z-jdkNN`) succeeded, and that version `x.y.z-jdkNN` is on Maven Central.
 8. Only after the release `x.y.z-jdkNN` has passed step 7: set the next SNAPSHOT version `x.(y+1).0-jdkNN-SNAPSHOT` on `dev-jdkNN` (for example `6.1.0-jdk21-SNAPSHOT` after `6.0.0-jdk21`), with the same number as the next version of `dev` in section "Release", step 9. If `dev` already has `x.(y+1).0-SNAPSHOT`, merge `dev` into `dev-jdkNN` as in subsection "Keeping a JDK variant up to date"; the merge sets the version. Otherwise set it in `pom.xml` and commit `pom - x.(y+1).0-jdkNN snapshot version`.
 
 ## Publishing upstream SNAPSHOTs before Level 3
