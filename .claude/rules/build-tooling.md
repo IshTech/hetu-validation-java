@@ -6,6 +6,25 @@
 - Check the latest release before upgrading (Maven Central `maven-metadata.xml`, or `https://services.gradle.org/versions/current`). Use stable releases, not milestones or RCs.
 - Don't change `.gitattributes` without the owner's approval.
 
+## JDK
+- Build on the JDK the branch requires. Maven: `java.version` in `pom.xml`. Gradle: `languageVersion` in the `java { toolchain { ... } }` block of `build.gradle.kts`. On a `dev-jdkNN` branch that value is `NN` (`versions-and-releases.md`, section "JDK variants"). Never lower it to match an installed JDK, and never build on a different JDK; install the required one instead.
+- Maven and Gradle follow `JAVA_HOME`, not the `java` on `PATH`. Check both (`java -version`, `echo $JAVA_HOME`) before a build, and set `JAVA_HOME` to the required JDK.
+- Gradle does not fetch a missing toolchain JDK: no toolchain resolver is configured, so the build fails instead of downloading one. Install it the same way as for Maven.
+- On Linux, including a cloud session, install a missing JDK from the Adoptium apt repository, as root, replacing `NN` with the required version:
+  ```
+  apt-get update -qq && apt-get install -y -qq wget gpg apt-transport-https
+  wget -qO- https://packages.adoptium.net/artifactory/api/gpg/key/public \
+    | gpg --dearmor > /etc/apt/trusted.gpg.d/adoptium.gpg
+  echo "deb https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print $2}' /etc/os-release) main" \
+    > /etc/apt/sources.list.d/adoptium.list
+  apt-get update -qq && apt-get install -y -qq temurin-NN-jdk
+  export JAVA_HOME=/usr/lib/jvm/temurin-NN-jdk-amd64
+  export PATH="$JAVA_HOME/bin:$PATH"
+  ```
+  This needs no approval: it changes nothing in any repo and nothing outside the session. Report which JDK was installed.
+- A cloud session starts with a new container, so the install repeats each session. It needs `packages.adoptium.net` to be reachable; if it isn't, stop and tell the owner, because only the owner can allow it.
+- On the owner's Windows machine, the owner manages the installed JDKs. If the required one is missing there, say so instead of installing it.
+
 ## Maven wrapper (Apache Maven Wrapper, only-script)
 - Upgrade: `rm -f mvnw mvnw.cmd && rm -rf .mvn/wrapper`, then run with the system `mvn` (not `./mvnw`, which rewrites itself mid-run):
   `mvn -N org.apache.maven.plugins:maven-wrapper-plugin:<wrapper-version>:wrapper -Dmaven=<maven-version> -Dtype=only-script`
