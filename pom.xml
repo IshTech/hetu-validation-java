@@ -6,7 +6,7 @@
 
 	<groupId>fi.ishtech.hetu</groupId>
 	<artifactId>hetu-validation</artifactId>
-	<version>5.0.0-jdk21</version>
+	<version>5.1.0-jdk21-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>hetu-validation</name>
@@ -47,7 +47,7 @@
 		<java.version>21</java.version>
 		<maven.compiler.release>${java.version}</maven.compiler.release>
 
-		<hetu-util.version>5.0.0-jdk21</hetu-util.version>
+		<hetu-util.version>5.1.0-jdk21-SNAPSHOT</hetu-util.version>
 
 		<jakarta-validation.version>3.1.1</jakarta-validation.version>
 		<junit-jupiter.version>6.1.3</junit-jupiter.version>
