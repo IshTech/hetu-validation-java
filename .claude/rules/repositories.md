@@ -12,8 +12,8 @@ Published to Maven Central, so they can have any number of consumers, in the own
 | Repo | Depends on (owner's libraries) |
 |---|---|
 | [ishtech-i18n-java](https://github.com/ishtech/ishtech-i18n-java) | none |
-| [ishtech-base-jpa](https://github.com/ishtech/ishtech-base-jpa) | ishtech-i18n-java |
-| [ishtech-springboot-jwtauth](https://github.com/ishtech/ishtech-springboot-jwtauth) (also an application: `-lib` and `-api` are published libraries, `-web` is the runnable application) | ishtech-base-jpa (and it pins the `ishtech-i18n` version in its dependency management) |
+| [ishtech-springboot-base-jpa](https://github.com/ishtech/ishtech-springboot-base-jpa) | ishtech-i18n-java |
+| [ishtech-springboot-jwtauth](https://github.com/ishtech/ishtech-springboot-jwtauth) (also an application: `-lib` and `-api` are published libraries, `-web` is the runnable application) | ishtech-springboot-base-jpa (and it pins the `ishtech-i18n` version in its dependency management) |
 | [ishtech-validations-java](https://github.com/ishtech/ishtech-validations-java) | none |
 | [hetu-util-java](https://github.com/ishtech/hetu-util-java) | none |
 | [hetu-validation-java](https://github.com/ishtech/hetu-validation-java) | hetu-util-java |
@@ -21,7 +21,7 @@ Published to Maven Central, so they can have any number of consumers, in the own
 Dependency tree (each library is listed above the libraries that depend on it):
 ```
 ishtech-i18n-java
-└── ishtech-base-jpa
+└── ishtech-springboot-base-jpa
     └── ishtech-springboot-jwtauth
 ishtech-validations-java
 hetu-util-java
@@ -45,5 +45,5 @@ The build files (`pom.xml`, `build.gradle.kts`) are the source of truth for depe
 
 When a task changes several repos:
 - Upstream first: change, build and test a library before the libraries and applications that use it (`build-and-test.md`, section "Cross-repo builds").
-- Repos with no dependency path between them are independent. Their changes and tests can be done in parallel or in any order: for example `ishtech-validations-java` and `ishtech-base-jpa`, or anything in the `hetu-*` chain and anything in the `ishtech-*` chain.
+- Repos with no dependency path between them are independent. Their changes and tests can be done in parallel or in any order: for example `ishtech-validations-java` and `ishtech-springboot-base-jpa`, or anything in the `hetu-*` chain and anything in the `ishtech-*` chain.
 - Pushes and publishing of upstream SNAPSHOTs also go upstream first, one repo at a time (`versions-and-releases.md`, section "Publishing upstream SNAPSHOTs before Level 3"). To run the CI/CD of several repos that depend on each other, follow `cicd-dependency-check.md`.
