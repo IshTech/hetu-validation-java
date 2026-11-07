@@ -27,7 +27,7 @@ Start the app the way the repo's docs describe (command, profile, database), on 
 Afterwards, stop the app and make sure the forked JVM has exited too; stopping Maven alone can leave it listening on the port.
 
 ### Level 3: build and run with Docker
-Precondition: the Docker build resolves the repo's upstream SNAPSHOT dependencies (for example `ishtech-base-jpa` and `ishtech-i18n`) from the Sonatype snapshot repository, not from the local Maven repository. The repo's own code is copied into the image, so its own SNAPSHOT doesn't need to be published. Level 3 therefore tests the latest upstream code only when the published upstream SNAPSHOTs contain it. If they don't yet, Level 3 can still run, but its result may not be reliable; say so in the report. How to publish them first: `versions-and-releases.md`, section "Publishing upstream SNAPSHOTs before Level 3".
+Precondition: the Docker build resolves the repo's upstream SNAPSHOT dependencies (for example `ishtech-springboot-base-jpa` and `ishtech-i18n`) from the Sonatype snapshot repository, not from the local Maven repository. The repo's own code is copied into the image, so its own SNAPSHOT doesn't need to be published. Level 3 therefore tests the latest upstream code only when the published upstream SNAPSHOTs contain it. If they don't yet, Level 3 can still run, but its result may not be reliable; say so in the report. How to publish them first: `versions-and-releases.md`, section "Publishing upstream SNAPSHOTs before Level 3".
 
 Build and start the app with docker compose as the repo's Docker doc describes. Use host ports that are free and don't clash with other running apps (the doc lists the port variables). Use the compose file's own database service when it defines one, not a local database. Then check, in order:
 1. Start-up: the app container is running, and its log (`docker logs <container>`) shows the application's "Started ..." line with no startup errors.
@@ -49,7 +49,7 @@ Testing a dependent doesn't make it part of the current task or release: it's in
 Purpose: to confirm that a change in this repo does not break its dependents and has the intended effect in them. This matters most before a release, so dependent tests are required for the `dev` to `main` readiness check (`versions-and-releases.md`).
 
 They run:
-- when the owner asks (for example: "test these `ishtech-base-jpa` changes in `ishtech-springboot-jwtauth`, so I'm sure they don't break anything and do what's intended"), and
+- when the owner asks (for example: "test these `ishtech-springboot-base-jpa` changes in `ishtech-springboot-jwtauth`, so I'm sure they don't break anything and do what's intended"), and
 - always, as part of the readiness check.
 
 If the owner doesn't name a dependent, use the default dependent listed in the repo's `.claude/CLAUDE.md`. If it lists none, ask the owner which dependent to use; in the readiness check, report the dependent tests as not done for that reason unless the owner names one.
